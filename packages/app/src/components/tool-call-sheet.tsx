@@ -8,7 +8,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
-import { X } from "lucide-react-native";
+import { Brain, X } from "lucide-react-native";
 import { SvgXml } from "react-native-svg";
 import type { ToolCallDetail } from "@getpaseo/protocol/agent-types";
 import {
@@ -138,6 +138,20 @@ interface ToolCallSheetContentProps {
   onClose: () => void;
 }
 
+function renderToolCallSheetIcon(
+  icon: ResolvedToolCallVisual,
+  accentColor: string,
+  foregroundColor: string,
+): ReactNode {
+  if (icon.kind === "svg") {
+    return <SvgXml xml={icon.xml} width={20} height={20} />;
+  }
+  if (icon.kind === "thinking") {
+    return <Brain size={20} color={accentColor} />;
+  }
+  return <icon.Component size={20} color={foregroundColor} />;
+}
+
 function ToolCallSheetContent({ data, onClose }: ToolCallSheetContentProps) {
   const { theme } = useUnistyles();
   const { displayName, detail, errorText, icon, showLoadingSkeleton } = data;
@@ -147,11 +161,7 @@ function ToolCallSheetContent({ data, onClose }: ToolCallSheetContentProps) {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          {icon.kind === "svg" ? (
-            <SvgXml xml={icon.xml} width={20} height={20} />
-          ) : (
-            <icon.Component size={20} color={theme.colors.foreground} />
-          )}
+          {renderToolCallSheetIcon(icon, theme.colors.accent, theme.colors.foreground)}
           <Text style={styles.headerTitle} numberOfLines={1}>
             {displayName}
           </Text>

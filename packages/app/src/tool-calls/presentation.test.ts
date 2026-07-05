@@ -101,7 +101,7 @@ describe("tool-call presentation", () => {
     }
   });
 
-  it("uses a git svg for git shell commands and console svg for plain shell", () => {
+  it("uses a git svg for git shell commands and a full-strength terminal for plain shell", () => {
     const gitPresentation = buildToolCallPresentation({
       toolName: "exec_command",
       status: "completed",
@@ -117,11 +117,12 @@ describe("tool-call presentation", () => {
       resolveIcon: fakeResolveIcon,
     });
 
+    // git → a coloured svg mark; plain shell → a monochrome terminal component
+    // rendered at full foreground strength (not the muted grey, not orange).
     expect(gitPresentation.iconVisual.kind).toBe("svg");
-    expect(shellPresentation.iconVisual.kind).toBe("svg");
-    if (gitPresentation.iconVisual.kind === "svg" && shellPresentation.iconVisual.kind === "svg") {
-      // The git and console icons are distinct coloured marks.
-      expect(gitPresentation.iconVisual.xml).not.toBe(shellPresentation.iconVisual.xml);
+    expect(shellPresentation.iconVisual.kind).toBe("component");
+    if (shellPresentation.iconVisual.kind === "component") {
+      expect(shellPresentation.iconVisual.emphasis).toBe("always");
     }
   });
 

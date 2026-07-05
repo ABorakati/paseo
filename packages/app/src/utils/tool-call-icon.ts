@@ -50,8 +50,22 @@ export function resolveToolCallIcon(
  * SVG string that renders as-is via `SvgXml`.
  */
 export type ResolvedToolCallVisual =
-  | { kind: "component"; Component: ToolCallIconComponent }
-  | { kind: "svg"; xml: string };
+  | { kind: "component"; Component: ToolCallIconComponent; emphasis?: ToolCallIconEmphasis }
+  | { kind: "svg"; xml: string }
+  // The "Thinking" row: rendered as the animated working indicator while the
+  // thought is live and a calm accent brain once it settles. Carries no payload
+  // — the badge owns the live/rest split via its loading state.
+  | { kind: "thinking" };
+
+/**
+ * How strongly a theme-tinted component icon is coloured.
+ * - `"muted"` (default): the historical behaviour — muted at rest, foreground
+ *   when the row is active/hovered.
+ * - `"always"`: full foreground strength regardless of active state. Used for
+ *   monochrome icons that should read as black/white rather than the muted grey
+ *   (e.g. the terminal icon for plain shell commands).
+ */
+export type ToolCallIconEmphasis = "muted" | "always";
 
 export interface ResolveToolCallVisualInput {
   toolName: string;
@@ -59,8 +73,11 @@ export interface ResolveToolCallVisualInput {
   provider?: string;
 }
 
-function componentVisual(Component: ToolCallIconComponent): ResolvedToolCallVisual {
-  return { kind: "component", Component };
+function componentVisual(
+  Component: ToolCallIconComponent,
+  emphasis?: ToolCallIconEmphasis,
+): ResolvedToolCallVisual {
+  return { kind: "component", Component, emphasis };
 }
 
 // Provider icon components require `{ size, color }`, whereas the tool-call
@@ -105,7 +122,12 @@ function resolveDetailVisual(
         // GitHub's mark is monochrome by brand; keep it theme-tinted.
         return componentVisual(GitHubIcon);
       }
-      return svgVisual(getNamedIconSvg(kind === "git" ? "git" : "console"));
+      if (kind === "git") {
+        return svgVisual(getNamedIconSvg("git"));
+      }
+      // Plain shell: a monochrome terminal at full foreground strength — reads
+      // as black/white rather than the coloured material console or muted grey.
+      return componentVisual(SquareTerminal, "always");
     }
     case "fetch":
       return svgVisual(getNamedIconSvg("http"));
@@ -128,6 +150,12 @@ function resolveDetailVisual(
  */
 export function resolveToolCallVisual(input: ResolveToolCallVisualInput): ResolvedToolCallVisual {
   const { toolName, detail, provider } = input;
+
+  // "Thinking" rows get a dedicated animated accent indicator instead of the
+  // muted brain. Mirrors the condition in resolveToolCallIconName.
+  if (toolName.trim().toLowerCase() === "thinking" && (!detail || detail.type === "unknown")) {
+    return { kind: "thinking" };
+  }
 
   // Preserve the plain_text.icon override ahead of any content-aware upgrade
   // so a tool that pins its own icon keeps it.

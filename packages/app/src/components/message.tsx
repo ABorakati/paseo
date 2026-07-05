@@ -70,7 +70,12 @@ import type { TodoEntry, UserMessageImageAttachment } from "@/types/stream";
 import type { AgentAttachment } from "@getpaseo/protocol/messages";
 import type { ToolCallDetail } from "@getpaseo/protocol/agent-types";
 import { buildToolCallPresentation } from "@/tool-calls/presentation";
-import { resolveToolCallIcon, type ResolvedToolCallVisual } from "@/utils/tool-call-icon";
+import {
+  resolveToolCallIcon,
+  type ResolvedToolCallVisual,
+  type ToolCallIconComponent,
+  type ToolCallIconEmphasis,
+} from "@/utils/tool-call-icon";
 import { getMarkdownListMarker, getMarkdownListSpacing } from "@/utils/markdown-list";
 import { markdownNodeContainsType } from "@/utils/markdown-ast";
 import { useStableEvent } from "@/hooks/use-stable-event";
@@ -120,6 +125,7 @@ import type { AgentCapabilityFlags } from "@getpaseo/protocol/agent-types";
 import { RewindMenu, type RewindMode } from "@/components/rewind/rewind-menu";
 import { useRewindAgentMutation } from "@/components/rewind/use-rewind-agent-mutation";
 import { AssistantForkMenu, type AssistantForkTarget } from "@/components/assistant-fork-menu";
+import { ThinkingIndicator } from "@/agent-stream/thinking-indicator";
 export type { InlinePathTarget } from "@/assistant-file-links";
 export type { AssistantForkTarget };
 
@@ -175,6 +181,12 @@ const ThemedTodoCheckIcon = withUnistyles(Check);
 const ThemedFileSymlinkIcon = withUnistyles(FileSymlink);
 const ThemedTriangleAlertIcon = withUnistyles(TriangleAlertIcon);
 const ThemedChevronRightIcon = withUnistyles(ChevronRight);
+const ThemedThinkingIndicator = withUnistyles(ThinkingIndicator);
+
+// Thinking rows use Paseo's accent green — brighter while the thought is live,
+// calmer once it settles — rather than a Claude-adjacent amber.
+const accentColorMapping = (theme: Theme) => ({ color: theme.colors.accent });
+const accentBrightColorMapping = (theme: Theme) => ({ color: theme.colors.accentBright });
 
 const foregroundColorMapping = (theme: Theme) => ({ color: theme.colors.foreground });
 const foregroundMutedColorMapping = (theme: Theme) => ({
@@ -2562,12 +2574,18 @@ const SVG_TOOL_ICON_REST_OPACITY = 0.85;
 function renderExpandableBadgeIcon({
   isError,
   isActive,
+  isThinking,
+  isThinkingActive,
   ThemedIcon,
+  iconEmphasis,
   svgXml,
 }: {
   isError: boolean;
   isActive: boolean;
+  isThinking: boolean;
+  isThinkingActive: boolean;
   ThemedIcon: ComponentType<{ size?: number; uniProps?: typeof foregroundColorMapping }> | null;
+  iconEmphasis: ToolCallIconEmphasis | undefined;
   svgXml: string | null;
 }): ReactNode {
   // Error state (triangle) always takes precedence over any content icon.
@@ -2575,6 +2593,18 @@ function renderExpandableBadgeIcon({
     return (
       <View style={LUCIDE_TOOL_ICON_NUDGE_LEFT}>
         <ThemedTriangleAlertIcon size={12} opacity={0.8} uniProps={destructiveColorMapping} />
+      </View>
+    );
+  }
+  // Thinking rows: a breathing accent-green brain while live, calm green at rest.
+  if (isThinking) {
+    return (
+      <View style={LUCIDE_TOOL_ICON_NUDGE_LEFT}>
+        <ThemedThinkingIndicator
+          size={12}
+          active={isThinkingActive}
+          uniProps={isThinkingActive ? accentBrightColorMapping : accentColorMapping}
+        />
       </View>
     );
   }
@@ -2591,11 +2621,12 @@ function renderExpandableBadgeIcon({
     );
   }
   if (ThemedIcon) {
+    const useForeground = iconEmphasis === "always" || isActive;
     return (
       <View style={LUCIDE_TOOL_ICON_NUDGE_LEFT}>
         <ThemedIcon
           size={12}
-          uniProps={isActive ? foregroundColorMapping : mutedForegroundColorMapping}
+          uniProps={useForeground ? foregroundColorMapping : mutedForegroundColorMapping}
         />
       </View>
     );
@@ -2717,6 +2748,20 @@ function buildShimmerTextStyle(input: {
     animation: `${WEB_TOOLCALL_SHIMMER_ANIMATION_NAME} ${input.shimmerDuration}s linear infinite`,
     "--paseo-shimmer-start": `${input.webShimmerTrackStart - input.offsetX}px`,
     "--paseo-shimmer-end": `${input.webShimmerTrackEnd - input.offsetX}px`,
+  };
+}
+
+function deriveBadgeIconParts(icon: ResolvedToolCallVisual | undefined): {
+  iconComponent: ToolCallIconComponent | null;
+  iconEmphasis: ToolCallIconEmphasis | undefined;
+  svgXml: string | null;
+  isThinking: boolean;
+} {
+  return {
+    iconComponent: icon?.kind === "component" ? icon.Component : null,
+    iconEmphasis: icon?.kind === "component" ? icon.emphasis : undefined,
+    svgXml: icon?.kind === "svg" ? icon.xml : null,
+    isThinking: icon?.kind === "thinking",
   };
 }
 
@@ -2960,13 +3005,20 @@ const ExpandableBadge = memo(function ExpandableBadge({
     [isExpanded],
   );
 
-  const iconComponent = icon?.kind === "component" ? icon.Component : null;
-  const svgXml = icon?.kind === "svg" ? icon.xml : null;
+  const { iconComponent, iconEmphasis, svgXml, isThinking } = deriveBadgeIconParts(icon);
   const ThemedIcon = useMemo(
     () => (iconComponent ? withUnistyles(iconComponent) : null),
     [iconComponent],
   );
-  const iconNode = renderExpandableBadgeIcon({ isError, isActive, ThemedIcon, svgXml });
+  const iconNode = renderExpandableBadgeIcon({
+    isError,
+    isActive,
+    isThinking,
+    isThinkingActive: isLoading,
+    ThemedIcon,
+    iconEmphasis,
+    svgXml,
+  });
   const iconSlotNode = renderExpandableBadgeIconSlot({
     showChevron: isInteractive && isHovered,
     chevronStyle,
