@@ -5,6 +5,7 @@ export interface MessageTrailRailProps {
   items: MessageTrailItem[];
   anchor: TrailAnchorStore;
   onJumpToMessage: (id: string) => void;
+  onFitChange: (fits: boolean) => void;
 }
 
 // Native/fallback: the message-trail rail is a web/desktop-only affordance built on

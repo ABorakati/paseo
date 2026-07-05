@@ -19,7 +19,6 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
-  type LayoutChangeEvent,
   type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
@@ -259,18 +258,6 @@ const AGENT_CAPABILITY_FLAG_KEYS: (keyof AgentCapabilityFlags)[] = [
 
 const EMPTY_STREAM_HEAD: StreamItem[] = [];
 
-// Below this measured pane width the message-trail rail would crowd the chat, so it stays
-// hidden. Web/desktop only; compact layouts never show it regardless of width. A gutter
-// only exists once the pane exceeds the centered content's own max width (MAX_CONTENT_WIDTH,
-// 820) — this is the true structural floor for a non-overlapping rail given its geometry
-// constants (see message-trail-rail.web.tsx: MAX_CONTENT_WIDTH + 2 * (RAIL_WIDTH +
-// MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN)). Below it the floating table-of-contents button
-// takes over.
-const MESSAGE_TRAIL_MIN_PANE_WIDTH = 880;
-// Below this measured pane height there isn't enough vertical room for the rail to read as
-// a useful minimap (and its tooltip has nowhere to go) — fall back to the floating TOC.
-const MESSAGE_TRAIL_MIN_PANE_HEIGHT = 320;
-
 function buildChatHistoryAttachment(input: {
   draftId: string;
   serverId: string;
@@ -344,20 +331,15 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
   }
   const trailAnchorStore = trailAnchorStoreRef.current;
 
-  // Rail visibility gates on measured pane width/height crossing fixed thresholds. Keep
-  // booleans that flip only on threshold crossings, not raw values that re-render every layout.
-  const [isWideEnoughForTrail, setIsWideEnoughForTrail] = useState(false);
-  const [isTallEnoughForTrail, setIsTallEnoughForTrail] = useState(false);
-  const handleRootLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    setIsWideEnoughForTrail((previous) => {
-      const next = width >= MESSAGE_TRAIL_MIN_PANE_WIDTH;
-      return next === previous ? previous : next;
-    });
-    setIsTallEnoughForTrail((previous) => {
-      const next = height >= MESSAGE_TRAIL_MIN_PANE_HEIGHT;
-      return next === previous ? previous : next;
-    });
+  // Whether the rail actually fits is decided by the rail itself, from its own live DOM
+  // measurement of the real rendered content edge (see message-trail-rail.web.tsx) rather
+  // than an assumed pane-width formula — different devices/breakpoints/font scales leave
+  // different amounts of space, and this adapts to whatever is actually there instead of a
+  // guessed pixel threshold. Default to "doesn't fit" so the floating TOC is what's visible
+  // until the rail proves otherwise (avoids ever flashing an overlapping rail).
+  const [railFits, setRailFits] = useState(false);
+  const handleRailFitChange = useCallback((fits: boolean) => {
+    setRailFits((previous) => (previous === fits ? previous : fits));
   }, []);
 
   const handleJumpToMessage = useCallback(
@@ -367,23 +349,22 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
     [viewportRef],
   );
 
+  // Compact layouts never attempt the rail (it never mounts there, so railFits stays at its
+  // default and the TOC formula below still resolves correctly).
   const showMessageTrail =
-    isWeb &&
-    !isMobile &&
-    isWideEnoughForTrail &&
-    isTallEnoughForTrail &&
-    messageTrailItems.length > 1 &&
-    trailAnchorStore !== null;
+    isWeb && !isMobile && messageTrailItems.length > 1 && trailAnchorStore !== null;
 
-  // When the rail can't show (pane too narrow, or compact layout) fall back to a floating
-  // table-of-contents button so message navigation is still available.
-  const showMessageTrailToc = isWeb && messageTrailItems.length > 1 && !showMessageTrail;
+  // The floating table-of-contents is the fallback for everything the rail doesn't cover:
+  // compact layouts, and — while mounted — panes where the rail's own measurement says it
+  // doesn't currently fit.
+  const showMessageTrailToc =
+    isWeb && messageTrailItems.length > 1 && !(showMessageTrail && railFits);
 
   return {
     messageTrailItems,
     trailItemIds,
     trailAnchorStore,
-    handleRootLayout,
+    handleRailFitChange,
     handleJumpToMessage,
     showMessageTrail,
     showMessageTrailToc,
@@ -633,12 +614,13 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
       ],
     );
     // Message-trail rail (web/desktop only). Extracted into a hook to keep this component's
-    // complexity in check; it derives ticks, owns the anchor store, and gates on pane width.
+    // complexity in check; it derives ticks, owns the anchor store, and tracks whether the
+    // rail's own live measurement says it currently fits.
     const {
       messageTrailItems,
       trailItemIds,
       trailAnchorStore,
-      handleRootLayout,
+      handleRailFitChange,
       handleJumpToMessage,
       showMessageTrail,
       showMessageTrailToc,
@@ -991,7 +973,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
 
     return (
       <ToolCallSheetProvider>
-        <View style={stylesheet.container} onLayout={handleRootLayout}>
+        <View style={stylesheet.container}>
           <MessageOuterSpacingProvider disableOuterSpacing>
             {streamRenderStrategy.render({
               agentId,
@@ -1019,6 +1001,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               items={messageTrailItems}
               anchor={trailAnchorStore}
               onJumpToMessage={handleJumpToMessage}
+              onFitChange={handleRailFitChange}
             />
           ) : null}
           {!isNearBottom && (

@@ -13,20 +13,36 @@ import { StyleSheet } from "react-native-unistyles";
 import type { MessageTrailItem } from "./message-trail-items";
 import type { TrailAnchorSnapshot, TrailAnchorStore } from "./message-trail-anchor";
 import { inlineUnistylesStyle } from "@/styles/unistyles-inline-style";
-import { MAX_CONTENT_WIDTH } from "@/constants/layout";
 
 export interface MessageTrailRailProps {
   items: MessageTrailItem[];
   anchor: TrailAnchorStore;
   onJumpToMessage: (id: string) => void;
+  /**
+   * Reports whether the rail's own live measurement says it currently has room to render
+   * without overlapping the chat content. The caller uses this to decide whether to show
+   * the floating table-of-contents instead — see message-trail-toc.web.tsx and the
+   * `showMessageTrailToc` derivation in view.tsx.
+   */
+  onFitChange: (fits: boolean) => void;
 }
 
 // Geometry (px). Ticks are center-anchored and grow symmetrically on hover; the tick
 // column is centered in the left gutter (see resolveRailLeft), so the rail fits in a
 // narrower gutter than a left/right-anchored one would. Kept as small as still-usable
-// (the click hit area is the whole rail region, not just the visible tick) since a gutter
-// only exists once the pane exceeds the centered content's own max width — every pixel
-// trimmed here lowers how wide the pane must get before the rail can show at all.
+// (the click hit area is the whole rail region, not just the visible tick) — every pixel
+// trimmed here lowers how much space is needed before the rail can show at all.
+//
+// These are plain literals rather than theme tokens: they feed raw DOM style/geometry math
+// (imperative writes, CSS px), not a React `style` prop, which is exactly the case
+// docs/unistyles.md's "hard-coded constants for genuinely static values" calls out — the
+// values don't need to be theme-reactive, they need to be numbers JS can do arithmetic on.
+// What *is* relative here is the geometry itself: rather than assuming a gutter width from
+// a hardcoded content-width formula (which only ever exists past a large fixed pane width,
+// regardless of device), every measurement below reads the real rendered DOM — the actual
+// left edge of a chat message and the pane's actual height — so the rail adapts to whatever
+// padding/breakpoint/font-scale is really in effect on this device, and can fit into a much
+// smaller pane than a formula tied to the reading column's own fixed max-width ever could.
 const RAIL_WIDTH = 20;
 const TICK_HEIGHT = 2;
 const TICK_HEIGHT_HOVER = 4; // hovered tick reads thicker, not just longer
@@ -44,32 +60,25 @@ const RAIL_EDGE_MIN = 3;
 // Small bias toward the pane edge so the rail reads a touch left of the exact midpoint.
 const RAIL_NUDGE_LEFT = 6;
 // Minimum breathing room between the rail's right edge (where a fully-magnified, center-
-// anchored tick reaches — it can grow up to TICK_MAX_WIDTH === RAIL_WIDTH) and the content
-// column's left edge. This is the hard floor `MESSAGE_TRAIL_MIN_PANE_WIDTH` in view.tsx is
-// derived from (MAX_CONTENT_WIDTH + 2 * (RAIL_WIDTH + MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN)) —
-// keep the two in sync if any of these change.
+// anchored tick reaches — it can grow up to TICK_MAX_WIDTH === RAIL_WIDTH) and the content's
+// real left edge.
 const MIN_GAP_TO_CONTENT = 6;
+// The rail needs at least this much measured content inset to fit without overlapping.
+const MIN_CONTENT_INSET_FOR_RAIL = RAIL_WIDTH + MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN;
 // Push the tooltip up so it reads centered on the focused tick rather than starting below it.
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
+// The rail needs enough vertical room for the tooltip to clear both above and below the
+// focused tick — below this it reads as cramped regardless of how many ticks fit.
+const MIN_PANE_HEIGHT_FOR_RAIL = TOOLTIP_BOTTOM_CLEARANCE * 2;
 
-// Center the (center-anchored) tick column on the midpoint of the left gutter — halfway
-// between the pane's left edge and the centered content column, biased a touch toward the
-// pane edge. Returns null when the pane isn't measured yet (fall back to the static left:0)
-// so the rail still paints on the first frame.
-//
-// Hard-clamped so the rail's right edge never crosses into the content column even if the
-// gutter turns out tighter than the caller's visibility threshold assumed (belt-and-braces
-// against the two drifting out of sync).
-function resolveRailLeft(paneWidth: number): number | null {
-  if (paneWidth <= 0) {
-    return null;
-  }
-  const contentWidth = Math.min(paneWidth, MAX_CONTENT_WIDTH);
-  const gutterWidth = (paneWidth - contentWidth) / 2;
-  const gutterCenter = gutterWidth / 2;
-  const desired = gutterCenter - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT;
-  const maxLeft = gutterWidth - RAIL_WIDTH - MIN_GAP_TO_CONTENT;
+// Center the (center-anchored) tick column on the midpoint of the measured content inset —
+// halfway between the pane's left edge and the real left edge of the chat content, biased a
+// touch toward the pane edge. Hard-clamped so the rail's right edge never crosses into the
+// content even if `contentInsetLeft` is smaller than expected.
+function resolveRailLeft(contentInsetLeft: number): number {
+  const desired = contentInsetLeft / 2 - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT;
+  const maxLeft = contentInsetLeft - RAIL_WIDTH - MIN_GAP_TO_CONTENT;
   return Math.max(RAIL_EDGE_MIN, Math.min(desired, maxLeft));
 }
 
@@ -137,7 +146,12 @@ function anchorOpacityFor(itemId: string, snapshot: TrailAnchorSnapshot): number
   return OPACITY_REST;
 }
 
-export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrailRailProps) {
+export function MessageTrailRail({
+  items,
+  anchor,
+  onJumpToMessage,
+  onFitChange,
+}: MessageTrailRailProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
   const columnRef = useRef<HTMLDivElement | null>(null);
   // Per-tick DOM nodes, indexed parallel to `items`. Written imperatively; never React state.
@@ -149,16 +163,18 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
   // Roving tabstop + tooltip target. Focus index also drives the tooltip position/content.
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
   const [rovingIndex, setRovingIndex] = useState(0);
-  // Pane size, self-measured so resizing never re-renders the (heavy) stream view. Width
-  // positions the rail in the gutter; height places the tooltip against the centered ticks.
-  const [paneSize, setPaneSize] = useState<{ width: number; height: number }>({
-    width: 0,
-    height: 0,
+  // Real, self-measured geometry — never assumed from a formula. `contentInsetLeft` is the
+  // actual left edge of a rendered chat message relative to the pane, and `paneHeight` is
+  // the pane's own measured height. Self-contained via ResizeObserver so pane resizes never
+  // re-render the (heavy) stream view.
+  const [metrics, setMetrics] = useState<{ contentInsetLeft: number; paneHeight: number }>({
+    contentInsetLeft: 0,
+    paneHeight: 0,
   });
 
   const count = items.length;
   // Compress ticks to fit the available rail height when there are many messages.
-  const availableHeight = paneSize.height > 0 ? paneSize.height * RAIL_HEIGHT_FRACTION : 0;
+  const availableHeight = metrics.paneHeight > 0 ? metrics.paneHeight * RAIL_HEIGHT_FRACTION : 0;
   const spacing = resolveTickSpacing(count, availableHeight);
   // Latest spacing for imperative pointer callbacks (magnification, click) without re-binding.
   const spacingRef = useRef(spacing);
@@ -311,26 +327,60 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
     };
   }, [handlePointerMove, handlePointerLeave]);
 
-  // Measure the pane (the rail's grandparent container) so the rail can sit in the gutter
-  // and the tooltip can track the vertically-centered ticks. Self-contained via
-  // ResizeObserver so pane resizes never re-render AgentStreamView.
+  // Measure the pane (the rail's grandparent container) so the rail can sit against the
+  // real content edge and the tooltip can track the vertically-centered ticks.
+  // Self-contained via ResizeObserver so pane resizes never re-render AgentStreamView.
+  const measureRef = useRef<() => void>(() => {});
   useEffect(() => {
     const container = railRef.current?.parentElement?.parentElement;
     if (!container || typeof ResizeObserver === "undefined") {
       return;
     }
     const measure = () => {
-      const width = container.clientWidth;
+      const containerRect = container.getBoundingClientRect();
       const height = container.clientHeight;
-      setPaneSize((prev) =>
-        prev.width === width && prev.height === height ? prev : { width, height },
-      );
+      // The real left edge of a rendered chat message, relative to the pane — this is what
+      // actually determines whether the rail has room, on this device, at this font scale,
+      // under this breakpoint's padding, rather than an assumed formula.
+      const itemEl = container.querySelector<HTMLElement>('[id^="stream-item-"]');
+      const measuredInset = itemEl
+        ? Math.max(0, itemEl.getBoundingClientRect().left - containerRect.left)
+        : null;
+      setMetrics((prev) => {
+        // No stream item mounted yet (e.g. the very first frame): keep the last known inset
+        // rather than snapping to 0, which would spuriously report "doesn't fit".
+        const nextInset = measuredInset === null ? prev.contentInsetLeft : measuredInset;
+        if (prev.paneHeight === height && prev.contentInsetLeft === nextInset) {
+          return prev;
+        }
+        return { contentInsetLeft: nextInset, paneHeight: height };
+      });
     };
+    measureRef.current = measure;
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // The container's own size doesn't change just because a new message mounted, so the
+  // ResizeObserver above won't refire for that — re-measure whenever the item set changes so
+  // the very first message's real inset is picked up as soon as it exists.
+  useEffect(() => {
+    measureRef.current();
+  }, [items]);
+
+  const fits =
+    metrics.contentInsetLeft >= MIN_CONTENT_INSET_FOR_RAIL &&
+    metrics.paneHeight >= MIN_PANE_HEIGHT_FOR_RAIL;
+  const lastReportedFitRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (lastReportedFitRef.current === fits) {
+      return;
+    }
+    lastReportedFitRef.current = fits;
+    onFitChange(fits);
+  }, [fits, onFitChange]);
 
   // Subscribe to the anchor store and write opacity changes to only the affected ticks.
   useEffect(() => {
@@ -463,35 +513,34 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
     [activateIndex],
   );
 
-  const focusedItem = focusIndex !== null ? items[focusIndex] : null;
+  const focusedItem = fits && focusIndex !== null ? items[focusIndex] : null;
   const reducedMotion = reducedMotionRef.current;
 
   // The tick column is vertically centered in the pane-height rail, so the tooltip must be
   // placed against the column's real top, not the pane top (the old bug that floated it up).
-  const columnTop = paneSize.height > 0 ? Math.max(0, (paneSize.height - columnHeight) / 2) : 0;
+  const columnTop =
+    metrics.paneHeight > 0 ? Math.max(0, (metrics.paneHeight - columnHeight) / 2) : 0;
   const tooltipTop = useMemo(() => {
     if (focusIndex === null) {
       return 0;
     }
     const tickCenter = columnTop + focusIndex * spacing + TICK_HEIGHT / 2;
     const maxTop =
-      paneSize.height > 0
-        ? Math.max(RAIL_EDGE_MIN, paneSize.height - TOOLTIP_BOTTOM_CLEARANCE)
+      metrics.paneHeight > 0
+        ? Math.max(RAIL_EDGE_MIN, metrics.paneHeight - TOOLTIP_BOTTOM_CLEARANCE)
         : Number.POSITIVE_INFINITY;
     return Math.min(maxTop, Math.max(RAIL_EDGE_MIN, tickCenter - TOOLTIP_VERTICAL_NUDGE));
-  }, [focusIndex, columnTop, paneSize.height, spacing]);
+  }, [focusIndex, columnTop, metrics.paneHeight, spacing]);
   const tooltipStyle = useMemo(
     () => [styles.tooltip, inlineUnistylesStyle({ top: tooltipTop })],
     [tooltipTop],
   );
 
-  // Sit the rail in the left gutter, ticks a fixed gap from the centered content column.
-  const railLeft = resolveRailLeft(paneSize.width);
+  // Sit the rail against the real content edge, ticks a fixed gap away from it. Irrelevant
+  // (and never visible) while `!fits`, but still a cheap, safe computation either way.
+  const railLeft = resolveRailLeft(metrics.contentInsetLeft);
   const railParentStyle = useMemo(
-    () =>
-      railLeft === null
-        ? styles.railParent
-        : [styles.railParent, inlineUnistylesStyle({ left: railLeft })],
+    () => [styles.railParent, inlineUnistylesStyle({ left: railLeft })],
     [railLeft],
   );
   const columnStyle = useMemo<CSSProperties>(
@@ -503,31 +552,39 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
     }),
     [columnHeight],
   );
+  // When it doesn't fit, keep the measuring DOM node mounted (so a later resize can still
+  // recover) but invisible and non-interactive — the floating TOC is the visible fallback.
+  const railDivStyle = useMemo<CSSProperties>(
+    () => (fits ? RAIL_DIV_STYLE : { ...RAIL_DIV_STYLE, opacity: 0, pointerEvents: "none" }),
+    [fits],
+  );
 
   return (
-    <View style={railParentStyle} pointerEvents="box-none">
+    <View style={railParentStyle} pointerEvents={fits ? "box-none" : "none"}>
       <div
         ref={railRef}
-        style={RAIL_DIV_STYLE}
+        style={railDivStyle}
         onClick={handleRailClick}
         role="tablist"
         aria-label="Message trail"
+        aria-hidden={!fits}
       >
         <div ref={columnRef} style={columnStyle}>
-          {items.map((item, index) => (
-            <TrailTick
-              key={item.id}
-              index={index}
-              item={item}
-              spacing={spacing}
-              isRoving={index === rovingIndex}
-              reducedMotion={reducedMotion}
-              registerRef={registerTickRef}
-              onKeyDown={handleKeyDown}
-              onFocus={handleTickFocus}
-              onBlur={handleTickBlur}
-            />
-          ))}
+          {fits &&
+            items.map((item, index) => (
+              <TrailTick
+                key={item.id}
+                index={index}
+                item={item}
+                spacing={spacing}
+                isRoving={index === rovingIndex}
+                reducedMotion={reducedMotion}
+                registerRef={registerTickRef}
+                onKeyDown={handleKeyDown}
+                onFocus={handleTickFocus}
+                onBlur={handleTickBlur}
+              />
+            ))}
         </div>
       </div>
       {focusedItem ? (
