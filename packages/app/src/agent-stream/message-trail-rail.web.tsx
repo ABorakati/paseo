@@ -23,12 +23,15 @@ export interface MessageTrailRailProps {
 
 // Geometry (px). Ticks are center-anchored and grow symmetrically on hover; the tick
 // column is centered in the left gutter (see resolveRailLeft), so the rail fits in a
-// narrower gutter than a left/right-anchored one would.
-const RAIL_WIDTH = 24;
+// narrower gutter than a left/right-anchored one would. Kept as small as still-usable
+// (the click hit area is the whole rail region, not just the visible tick) since a gutter
+// only exists once the pane exceeds the centered content's own max width — every pixel
+// trimmed here lowers how wide the pane must get before the rail can show at all.
+const RAIL_WIDTH = 20;
 const TICK_HEIGHT = 2;
 const TICK_HEIGHT_HOVER = 4; // hovered tick reads thicker, not just longer
 const TICK_BASE_WIDTH = 6;
-const TICK_MAX_WIDTH = 24;
+const TICK_MAX_WIDTH = 20;
 // Tick spacing is dynamic: at the default when there's room, compressed toward the minimum
 // so hundreds of ticks still fit the available height (a minimap) rather than overflowing.
 // The magnification is the "accordion" that expands a compressed region on hover.
@@ -37,9 +40,15 @@ const MIN_TICK_SPACING = 3; // floor when compressing many ticks to fit
 const REDUCED_MOTION_HOVER_WIDTH = 16;
 const RAIL_HEIGHT_FRACTION = 0.8; // tick column capped at 80% of rail height
 // Never let the rail region's left edge get closer than this to the pane edge.
-const RAIL_EDGE_MIN = 4;
+const RAIL_EDGE_MIN = 3;
 // Small bias toward the pane edge so the rail reads a touch left of the exact midpoint.
-const RAIL_NUDGE_LEFT = 8;
+const RAIL_NUDGE_LEFT = 6;
+// Minimum breathing room between the rail's right edge (where a fully-magnified, center-
+// anchored tick reaches — it can grow up to TICK_MAX_WIDTH === RAIL_WIDTH) and the content
+// column's left edge. This is the hard floor `MESSAGE_TRAIL_MIN_PANE_WIDTH` in view.tsx is
+// derived from (MAX_CONTENT_WIDTH + 2 * (RAIL_WIDTH + MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN)) —
+// keep the two in sync if any of these change.
+const MIN_GAP_TO_CONTENT = 6;
 // Push the tooltip up so it reads centered on the focused tick rather than starting below it.
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
@@ -48,6 +57,10 @@ const TOOLTIP_BOTTOM_CLEARANCE = 64;
 // between the pane's left edge and the centered content column, biased a touch toward the
 // pane edge. Returns null when the pane isn't measured yet (fall back to the static left:0)
 // so the rail still paints on the first frame.
+//
+// Hard-clamped so the rail's right edge never crosses into the content column even if the
+// gutter turns out tighter than the caller's visibility threshold assumed (belt-and-braces
+// against the two drifting out of sync).
 function resolveRailLeft(paneWidth: number): number | null {
   if (paneWidth <= 0) {
     return null;
@@ -55,7 +68,9 @@ function resolveRailLeft(paneWidth: number): number | null {
   const contentWidth = Math.min(paneWidth, MAX_CONTENT_WIDTH);
   const gutterWidth = (paneWidth - contentWidth) / 2;
   const gutterCenter = gutterWidth / 2;
-  return Math.max(RAIL_EDGE_MIN, gutterCenter - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT);
+  const desired = gutterCenter - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT;
+  const maxLeft = gutterWidth - RAIL_WIDTH - MIN_GAP_TO_CONTENT;
+  return Math.max(RAIL_EDGE_MIN, Math.min(desired, maxLeft));
 }
 
 // Opacity states, quietest to loudest.

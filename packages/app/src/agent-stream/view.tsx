@@ -260,11 +260,16 @@ const AGENT_CAPABILITY_FLAG_KEYS: (keyof AgentCapabilityFlags)[] = [
 const EMPTY_STREAM_HEAD: StreamItem[] = [];
 
 // Below this measured pane width the message-trail rail would crowd the chat, so it stays
-// hidden. Web/desktop only; compact layouts never show it regardless of width.
-// Sized so the centered content column (MAX_CONTENT_WIDTH) still leaves a gutter wide
-// enough for the centered tick column plus a gap before the text (see message-trail-rail);
-// below this the floating table-of-contents button takes over.
-const MESSAGE_TRAIL_MIN_PANE_WIDTH = 900;
+// hidden. Web/desktop only; compact layouts never show it regardless of width. A gutter
+// only exists once the pane exceeds the centered content's own max width (MAX_CONTENT_WIDTH,
+// 820) — this is the true structural floor for a non-overlapping rail given its geometry
+// constants (see message-trail-rail.web.tsx: MAX_CONTENT_WIDTH + 2 * (RAIL_WIDTH +
+// MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN)). Below it the floating table-of-contents button
+// takes over.
+const MESSAGE_TRAIL_MIN_PANE_WIDTH = 880;
+// Below this measured pane height there isn't enough vertical room for the rail to read as
+// a useful minimap (and its tooltip has nowhere to go) — fall back to the floating TOC.
+const MESSAGE_TRAIL_MIN_PANE_HEIGHT = 320;
 
 function buildChatHistoryAttachment(input: {
   draftId: string;
@@ -339,13 +344,18 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
   }
   const trailAnchorStore = trailAnchorStoreRef.current;
 
-  // Rail visibility gates on measured pane width crossing a fixed threshold. Keep a boolean
-  // that flips only on threshold crossings, not a width value that re-renders every layout.
+  // Rail visibility gates on measured pane width/height crossing fixed thresholds. Keep
+  // booleans that flip only on threshold crossings, not raw values that re-render every layout.
   const [isWideEnoughForTrail, setIsWideEnoughForTrail] = useState(false);
+  const [isTallEnoughForTrail, setIsTallEnoughForTrail] = useState(false);
   const handleRootLayout = useCallback((event: LayoutChangeEvent) => {
-    const width = event.nativeEvent.layout.width;
+    const { width, height } = event.nativeEvent.layout;
     setIsWideEnoughForTrail((previous) => {
       const next = width >= MESSAGE_TRAIL_MIN_PANE_WIDTH;
+      return next === previous ? previous : next;
+    });
+    setIsTallEnoughForTrail((previous) => {
+      const next = height >= MESSAGE_TRAIL_MIN_PANE_HEIGHT;
       return next === previous ? previous : next;
     });
   }, []);
@@ -361,6 +371,7 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
     isWeb &&
     !isMobile &&
     isWideEnoughForTrail &&
+    isTallEnoughForTrail &&
     messageTrailItems.length > 1 &&
     trailAnchorStore !== null;
 

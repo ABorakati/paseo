@@ -74,6 +74,10 @@ export function MessageTrailToc({ items, onJumpToMessage }: MessageTrailTocProps
         anchorRef={anchorRef}
         desktopPlacement="top-start"
         desktopMinWidth={280}
+        // Cap the popover to a handful of rows so a long conversation scrolls internally
+        // instead of requesting a tall panel that, opening upward from a bottom-anchored
+        // button, can reach past the top of a short window/pane.
+        desktopFixedHeight={260}
         header={TOC_HEADER}
       />
     </>
