@@ -34,6 +34,8 @@ const REDUCED_MOTION_HOVER_WIDTH = 16;
 const RAIL_HEIGHT_FRACTION = 0.8; // tick column capped at 80% of rail height
 // Never let the rail region's left edge get closer than this to the pane edge.
 const RAIL_EDGE_MIN = 4;
+// Small bias toward the pane edge so the rail reads a touch left of the exact midpoint.
+const RAIL_NUDGE_LEFT = 8;
 // Push the tooltip up so it reads centered on the focused tick rather than starting below it.
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
@@ -50,7 +52,7 @@ function resolveRailLeft(paneWidth: number): number | null {
   const contentWidth = Math.min(paneWidth, MAX_CONTENT_WIDTH);
   const gutterLeft = (paneWidth - contentWidth) / 2;
   const gutterCenter = gutterLeft / 2;
-  const ticksRightEdge = gutterCenter + TICK_BASE_WIDTH / 2;
+  const ticksRightEdge = gutterCenter + TICK_BASE_WIDTH / 2 - RAIL_NUDGE_LEFT;
   return Math.max(RAIL_EDGE_MIN, ticksRightEdge - RAIL_WIDTH);
 }
 

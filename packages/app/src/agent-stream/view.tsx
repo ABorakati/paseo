@@ -64,6 +64,7 @@ import { type StreamSegmentRenderers, type StreamViewportHandle } from "./strate
 import { deriveMessageTrailItems } from "./message-trail-items";
 import { createTrailAnchorStore } from "./message-trail-anchor";
 import { MessageTrailRail } from "@/agent-stream/message-trail-rail";
+import { MessageTrailToc } from "@/agent-stream/message-trail-toc";
 import {
   CompletedTurnFooterRow,
   TurnFooter,
@@ -362,6 +363,10 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
     messageTrailItems.length > 1 &&
     trailAnchorStore !== null;
 
+  // When the rail can't show (pane too narrow, or compact layout) fall back to a floating
+  // table-of-contents button so message navigation is still available.
+  const showMessageTrailToc = isWeb && messageTrailItems.length > 1 && !showMessageTrail;
+
   return {
     messageTrailItems,
     trailItemIds,
@@ -369,6 +374,7 @@ function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailI
     handleRootLayout,
     handleJumpToMessage,
     showMessageTrail,
+    showMessageTrailToc,
   };
 }
 
@@ -623,6 +629,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
       handleRootLayout,
       handleJumpToMessage,
       showMessageTrail,
+      showMessageTrailToc,
     } = useMessageTrail({
       tail: effectiveStreamItems,
       head: effectiveStreamHead,
@@ -1001,6 +1008,9 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               anchor={trailAnchorStore}
               onJumpToMessage={handleJumpToMessage}
             />
+          ) : null}
+          {showMessageTrailToc ? (
+            <MessageTrailToc items={messageTrailItems} onJumpToMessage={handleJumpToMessage} />
           ) : null}
           {!isNearBottom && (
             <Animated.View
