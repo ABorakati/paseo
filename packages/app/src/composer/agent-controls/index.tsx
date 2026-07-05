@@ -830,7 +830,7 @@ function DesktopAgentControlsContent(props: DesktopAgentControlsContentProps) {
                 })}
                 testID="agent-thinking-selector"
               >
-                <Brain size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
+                <Brain size={theme.iconSize.md} color={theme.colors.accent} />
                 <Text style={styles.modeBadgeText}>{displayThinking}</Text>
               </ComboboxTrigger>
             </TooltipTrigger>
@@ -1025,7 +1025,7 @@ function SheetAgentControlsContent(props: SheetAgentControlsContentProps) {
           accessibilityLabel={t("agentControls.thinking.select")}
           testID="agent-controls-thinking"
         >
-          <Brain size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
+          <Brain size={theme.iconSize.md} color={theme.colors.accent} />
         </Pressable>
       ) : null}
 

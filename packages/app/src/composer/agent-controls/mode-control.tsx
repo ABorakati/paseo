@@ -54,6 +54,28 @@ const MODE_ICONS: Record<string, ComponentType<ModeIconProps>> = {
   ShieldQuestionMark,
 };
 
+interface ModeIconColors {
+  safe: string;
+  danger: string;
+  muted: string;
+}
+
+// Risk-tint the permission shield by the mode's semantic colorTier so it reads
+// at a glance: a safe mode takes Paseo's accent green, a dangerous/unattended
+// mode takes the destructive tone, and the everyday moderate/planning modes
+// stay quiet. Tiering off the icon name would be ambiguous (plan and default
+// share ShieldCheck; bypass and acceptEdits share ShieldAlert).
+function resolveModeIconColor(colorTier: string | undefined, colors: ModeIconColors): string {
+  switch (colorTier) {
+    case "safe":
+      return colors.safe;
+    case "dangerous":
+      return colors.danger;
+    default:
+      return colors.muted;
+  }
+}
+
 interface ModeComboboxOptionProps {
   option: ComboboxOption;
   selected: boolean;
@@ -129,7 +151,11 @@ function AgentModeControlView({
     ? getModeVisuals(provider, selectedMode.id, providerDefinitions)
     : undefined;
   const Icon = visuals?.icon ? MODE_ICONS[visuals.icon] : undefined;
-  const iconColor = theme.colors.foregroundMuted;
+  const iconColor = resolveModeIconColor(visuals?.colorTier, {
+    safe: theme.colors.accent,
+    danger: theme.colors.destructive,
+    muted: theme.colors.foregroundMuted,
+  });
   const selectedModeLabel = selectedMode ? formatAgentModeLabel(selectedMode) : "";
 
   const allOptions = useMemo<ComboboxOption[]>(
