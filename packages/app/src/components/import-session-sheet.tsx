@@ -12,7 +12,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { AdaptiveModalSheet, type SheetHeader } from "@/components/adaptive-modal-sheet";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Combobox, ComboboxItem, type ComboboxOption } from "@/components/ui/combobox";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { formatTimeAgo } from "@/utils/time";
 import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
 import { i18n } from "@/i18n/i18next";
@@ -204,7 +204,7 @@ function ImportSessionSheetRow({
   const title = getSessionTitle(entry);
   const promptPreview = getPromptPreview(entry);
   const lastActivity = formatTimeAgo(new Date(entry.lastActivityAt));
-  const ProviderIcon = getProviderIcon(entry.providerId);
+  const ProviderIcon = getBrandedProviderIcon(entry.providerId);
   const accessibilityState = useMemo(
     () => (disabled ? DISABLED_ACCESSIBILITY_STATE : undefined),
     [disabled],
@@ -367,7 +367,7 @@ export function ImportSessionSheet({
     const map = new Map<string, React.ReactNode>();
     map.set(ALL_FILTER_VALUE, <Layers size={14} color={theme.colors.foregroundMuted} />);
     for (const provider of filterProviders) {
-      const ProviderIcon = getProviderIcon(provider);
+      const ProviderIcon = getBrandedProviderIcon(provider);
       map.set(provider, <ProviderIcon size={14} color={theme.colors.foregroundMuted} />);
     }
     return map;
@@ -495,7 +495,7 @@ export function ImportSessionSheet({
               <Layers size={14} color={theme.colors.foregroundMuted} />
             ) : (
               (() => {
-                const ProviderIcon = getProviderIcon(selectedProvider);
+                const ProviderIcon = getBrandedProviderIcon(selectedProvider);
                 return <ProviderIcon size={14} color={theme.colors.foregroundMuted} />;
               })()
             )}

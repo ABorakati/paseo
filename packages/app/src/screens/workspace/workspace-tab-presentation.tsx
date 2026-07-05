@@ -136,6 +136,15 @@ export function WorkspaceTabIcon({
     () => [styles.agentIconWrapper, { width: size, height: size }],
     [size],
   );
+  // Branded provider icons (e.g. Claude, MiniMax) render in a fixed brand
+  // color and ignore `iconColor`, so active/inactive tabs would otherwise
+  // look identical. Dim the icon itself via wrapper opacity instead of tint
+  // when inactive — monochrome icons still get their normal muted tint from
+  // `iconColor` on top, which is a no-op visual change for them.
+  const iconOpacityStyle = useMemo(
+    () => (active ? undefined : { opacity: styles.iconInactiveDim.opacity }),
+    [active],
+  );
   const statusDotStyle = useMemo(
     () => [
       styles.statusDot,
@@ -161,7 +170,9 @@ export function WorkspaceTabIcon({
 
   return (
     <View style={agentIconWrapperStyle}>
-      <Icon size={size} color={iconColor} />
+      <View style={iconOpacityStyle}>
+        <Icon size={size} color={iconColor} />
+      </View>
       {statusDotColor ? <View style={statusDotStyle} /> : null}
     </View>
   );
@@ -255,6 +266,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   iconInactive: {
     color: theme.colors.foregroundMuted,
+  },
+  iconInactiveDim: {
+    opacity: theme.opacity[50],
   },
   syncedLoader: {
     color:

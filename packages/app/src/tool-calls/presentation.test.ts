@@ -1,5 +1,33 @@
 import type { ToolCallDetail } from "@getpaseo/protocol/agent-types";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// The visual resolver statically imports icon components (Lucide, GitHub, the
+// Paseo logo, and provider icons) that transitively pull in `react-native`'s
+// Flow source through `react-native-svg`/`lucide-react-native`, which the node
+// test environment cannot parse. Stub those component modules so the pure
+// presentation + visual-resolution logic can run here. The coloured file/git/
+// console/http SVGs come from the pure `material-file-icons` module (no stub
+// needed), so the svg-vs-component decisions below are still exercised for real.
+vi.mock("lucide-react-native", () => {
+  const Stub = () => null;
+  return {
+    Bot: Stub,
+    Brain: Stub,
+    Eye: Stub,
+    MicVocal: Stub,
+    Pencil: Stub,
+    Search: Stub,
+    Sparkles: Stub,
+    SquareTerminal: Stub,
+    Wrench: Stub,
+    CheckSquare: Stub,
+  };
+});
+vi.mock("@/components/icons/paseo-logo", () => ({ PaseoLogo: () => null }));
+vi.mock("@/components/icons/github-icon", () => ({ GitHubIcon: () => null }));
+vi.mock("@/components/provider-icons", () => ({
+  getBrandedProviderIcon: () => () => null,
+}));
 
 import { buildToolCallPresentation, type ToolCallPresentationIcon } from "./presentation";
 
@@ -50,6 +78,63 @@ describe("tool-call presentation", () => {
       openFilePath: "/tmp/repo/src/index.ts",
       isPlan: false,
     });
+  });
+
+  it("resolves a coloured file-icon svg for edits with a file path", () => {
+    const presentation = buildToolCallPresentation({
+      toolName: "edit_file",
+      status: "completed",
+      error: null,
+      detail: {
+        type: "edit",
+        filePath: "/tmp/repo/src/app.ts",
+        oldString: "a",
+        newString: "b",
+      },
+      resolveIcon: fakeResolveIcon,
+    });
+
+    expect(presentation.iconVisual.kind).toBe("svg");
+    if (presentation.iconVisual.kind === "svg") {
+      // TypeScript file icon uses the typescript brand color.
+      expect(presentation.iconVisual.xml).toContain("<svg");
+    }
+  });
+
+  it("uses a git svg for git shell commands and console svg for plain shell", () => {
+    const gitPresentation = buildToolCallPresentation({
+      toolName: "exec_command",
+      status: "completed",
+      error: null,
+      detail: { type: "shell", command: "git status" },
+      resolveIcon: fakeResolveIcon,
+    });
+    const shellPresentation = buildToolCallPresentation({
+      toolName: "exec_command",
+      status: "completed",
+      error: null,
+      detail: { type: "shell", command: "ls -la" },
+      resolveIcon: fakeResolveIcon,
+    });
+
+    expect(gitPresentation.iconVisual.kind).toBe("svg");
+    expect(shellPresentation.iconVisual.kind).toBe("svg");
+    if (gitPresentation.iconVisual.kind === "svg" && shellPresentation.iconVisual.kind === "svg") {
+      // The git and console icons are distinct coloured marks.
+      expect(gitPresentation.iconVisual.xml).not.toBe(shellPresentation.iconVisual.xml);
+    }
+  });
+
+  it("falls back to the tinted component visual when no richer detail exists", () => {
+    const presentation = buildToolCallPresentation({
+      toolName: "some_unknown_tool",
+      status: "completed",
+      error: null,
+      detail: { type: "unknown", input: null, output: null },
+      resolveIcon: fakeResolveIcon,
+    });
+
+    expect(presentation.iconVisual.kind).toBe("component");
   });
 
   it("marks running calls without meaningful detail as loading details", () => {

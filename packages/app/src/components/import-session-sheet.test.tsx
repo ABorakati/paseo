@@ -62,6 +62,7 @@ vi.mock("@/constants/layout", () => ({
 
 vi.mock("@/components/provider-icons", () => ({
   getProviderIcon: () => () => null,
+  getBrandedProviderIcon: () => () => null,
 }));
 
 vi.mock("lucide-react-native", () => {

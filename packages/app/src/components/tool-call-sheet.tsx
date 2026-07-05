@@ -9,12 +9,13 @@ import {
   BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
 import { X } from "lucide-react-native";
+import { SvgXml } from "react-native-svg";
 import type { ToolCallDetail } from "@getpaseo/protocol/agent-types";
 import {
   IsolatedBottomSheetModal,
   useIsolatedBottomSheetVisibility,
 } from "@/components/ui/isolated-bottom-sheet-modal";
-import type { ToolCallIconComponent } from "@/utils/tool-call-icon";
+import type { ResolvedToolCallVisual } from "@/utils/tool-call-icon";
 import { ToolCallDetailsContent } from "./tool-call-details";
 
 // ----- Types -----
@@ -24,7 +25,7 @@ export interface ToolCallSheetData {
   summary?: string;
   detail?: ToolCallDetail;
   errorText?: string;
-  icon: ToolCallIconComponent;
+  icon: ResolvedToolCallVisual;
   showLoadingSkeleton?: boolean;
 }
 
@@ -139,14 +140,18 @@ interface ToolCallSheetContentProps {
 
 function ToolCallSheetContent({ data, onClose }: ToolCallSheetContentProps) {
   const { theme } = useUnistyles();
-  const { displayName, detail, errorText, icon: IconComponent, showLoadingSkeleton } = data;
+  const { displayName, detail, errorText, icon, showLoadingSkeleton } = data;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <IconComponent size={20} color={theme.colors.foreground} />
+          {icon.kind === "svg" ? (
+            <SvgXml xml={icon.xml} width={20} height={20} />
+          ) : (
+            <icon.Component size={20} color={theme.colors.foreground} />
+          )}
           <Text style={styles.headerTitle} numberOfLines={1}>
             {displayName}
           </Text>

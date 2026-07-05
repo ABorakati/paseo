@@ -23,7 +23,7 @@ import { useShallow } from "zustand/shallow";
 import { Brain, ListTodo, Settings2, ShieldCheck, Zap } from "lucide-react-native";
 import { DropdownTrigger } from "@/components/ui/dropdown-trigger";
 import { ComboboxTrigger } from "@/components/ui/combobox-trigger";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { CombinedModelSelector } from "@/components/combined-model-selector";
 import {
   buildProviderSelectorProviders,
@@ -309,7 +309,7 @@ function resolveProviderIcon(provider: string) {
   if (provider.trim().length === 0) {
     return null;
   }
-  return getProviderIcon(provider);
+  return getBrandedProviderIcon(provider);
 }
 
 type AgentControlsSlice = {
@@ -888,7 +888,7 @@ interface SheetAgentControlsContentProps {
   modelDisabled: boolean;
   comboboxThinkingOptions: ComboboxOption[];
   openSelector: AgentControlSelector | null;
-  ProviderIcon: ReturnType<typeof getProviderIcon> | null;
+  ProviderIcon: ReturnType<typeof getBrandedProviderIcon> | null;
   activeSheet: ActiveSheet;
   handleOpenSheet: (sheet: Exclude<ActiveSheet, null>) => void;
   handleCloseSheet: () => void;

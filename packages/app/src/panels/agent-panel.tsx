@@ -16,7 +16,7 @@ import { FileDropZone } from "@/components/file-drop/file-drop-zone";
 import { Composer } from "@/composer";
 import { AgentModeControl } from "@/composer/agent-controls/mode-control";
 import { RewindComposerRestoreProvider } from "@/components/rewind/composer-restore";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import {
   ToastViewport,
   useToastHost,
@@ -309,7 +309,7 @@ function useAgentPanelDescriptor(
   );
   const provider = descriptorState.provider;
   const label = resolveWorkspaceAgentTabLabel(descriptorState.title);
-  const icon = getProviderIcon(provider);
+  const icon = getBrandedProviderIcon(provider);
 
   return {
     label: label ?? "",

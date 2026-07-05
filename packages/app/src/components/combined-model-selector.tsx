@@ -47,7 +47,7 @@ function drillDownRowStyle({
     pressed && styles.drillDownRowPressed,
   ];
 }
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import {
   buildSelectedTriggerLabel,
   filterAndRankModelRows,
@@ -151,7 +151,7 @@ function ModelRow({
 }) {
   const { theme } = useUnistyles();
   const { t } = useTranslation();
-  const ProviderIcon = getProviderIcon(row.provider);
+  const ProviderIcon = getBrandedProviderIcon(row.provider);
 
   const handleToggleFavorite = useCallback(
     (event: GestureResponderEvent) => {
@@ -307,7 +307,7 @@ function iconButtonStyle({ hovered, pressed }: PressableStateCallbackType & { ho
 function GroupProviderButton({ provider, onDrillDown }: GroupProviderButtonProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation();
-  const ProvIcon = getProviderIcon(provider.id);
+  const ProvIcon = getBrandedProviderIcon(provider.id);
   const selection = provider.modelSelection;
 
   const handlePress = useCallback(() => {
@@ -643,7 +643,7 @@ export function CombinedModelSelector({
   );
 
   const hasSelectedProvider = selectedProvider.trim().length > 0;
-  const ProviderIcon = hasSelectedProvider ? getProviderIcon(selectedProvider) : null;
+  const ProviderIcon = hasSelectedProvider ? getBrandedProviderIcon(selectedProvider) : null;
 
   const selectedModelLabel = useMemo(() => {
     return resolveSelectedModelLabel({
@@ -750,7 +750,7 @@ export function CombinedModelSelector({
     if (view.kind === "all") {
       return { title: t("modelSelector.title") };
     }
-    const ProviderIconForView = getProviderIcon(view.providerId);
+    const ProviderIconForView = getBrandedProviderIcon(view.providerId);
     const headerActions = (
       <Pressable
         onPress={openProviderSettings}

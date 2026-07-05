@@ -19,6 +19,7 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
+  type LayoutChangeEvent,
   type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
@@ -60,6 +61,9 @@ import { ToolCallSheetProvider } from "@/components/tool-call-sheet";
 import { type AgentStreamRenderModel, buildAgentStreamRenderModel } from "./model";
 import { resolveStreamRenderStrategy } from "./strategy-resolver";
 import { type StreamSegmentRenderers, type StreamViewportHandle } from "./strategy";
+import { deriveMessageTrailItems } from "./message-trail-items";
+import { createTrailAnchorStore } from "./message-trail-anchor";
+import { MessageTrailRail } from "@/agent-stream/message-trail-rail";
 import {
   CompletedTurnFooterRow,
   TurnFooter,
@@ -154,7 +158,9 @@ function renderStreamItemWithTurnFooter(input: {
     />
   ) : null;
   const content = (
-    <StreamItemWrapper gapBelow={input.layoutItem.gapBelow}>{input.content}</StreamItemWrapper>
+    <StreamItemWrapper itemId={input.layoutItem.item.id} gapBelow={input.layoutItem.gapBelow}>
+      {input.content}
+    </StreamItemWrapper>
   );
 
   if (input.layoutItem.frameOrder === "footer-then-content") {
@@ -223,6 +229,7 @@ function renderLiveHeadStreamItem(input: {
 export interface AgentStreamViewHandle {
   scrollToBottom(reason?: BottomAnchorLocalRequest["reason"]): void;
   prepareForViewportChange(): void;
+  scrollToMessage(itemId: string): void;
 }
 
 export interface AgentStreamViewProps {
@@ -250,6 +257,10 @@ const AGENT_CAPABILITY_FLAG_KEYS: (keyof AgentCapabilityFlags)[] = [
 ];
 
 const EMPTY_STREAM_HEAD: StreamItem[] = [];
+
+// Below this measured pane width the message-trail rail would crowd the chat, so it stays
+// hidden. Web/desktop only; compact layouts never show it regardless of width.
+const MESSAGE_TRAIL_MIN_PANE_WIDTH = 864;
 
 function buildChatHistoryAttachment(input: {
   draftId: string;
@@ -299,6 +310,64 @@ function buildForkDraftTabTarget(
   draftId: string,
 ): WorkspaceTabTarget {
   return setup ? { kind: "draft", draftId, setup } : { kind: "draft", draftId };
+}
+
+interface UseMessageTrailInput {
+  tail: StreamItem[];
+  head: StreamItem[] | undefined;
+  isMobile: boolean;
+  viewportRef: React.RefObject<StreamViewportHandle | null>;
+}
+
+function useMessageTrail({ tail, head, isMobile, viewportRef }: UseMessageTrailInput) {
+  // Derive one tick per user message. Skip entirely on native — the rail renders null there.
+  const messageTrailItems = useMemo(() => {
+    if (!isWeb) {
+      return [];
+    }
+    return deriveMessageTrailItems(tail, head ?? EMPTY_STREAM_HEAD);
+  }, [tail, head]);
+  const trailItemIds = useMemo(() => messageTrailItems.map((item) => item.id), [messageTrailItems]);
+
+  const trailAnchorStoreRef = useRef<ReturnType<typeof createTrailAnchorStore> | null>(null);
+  if (isWeb && trailAnchorStoreRef.current === null) {
+    trailAnchorStoreRef.current = createTrailAnchorStore();
+  }
+  const trailAnchorStore = trailAnchorStoreRef.current;
+
+  // Rail visibility gates on measured pane width crossing a fixed threshold. Keep a boolean
+  // that flips only on threshold crossings, not a width value that re-renders every layout.
+  const [isWideEnoughForTrail, setIsWideEnoughForTrail] = useState(false);
+  const handleRootLayout = useCallback((event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    setIsWideEnoughForTrail((previous) => {
+      const next = width >= MESSAGE_TRAIL_MIN_PANE_WIDTH;
+      return next === previous ? previous : next;
+    });
+  }, []);
+
+  const handleJumpToMessage = useCallback(
+    (itemId: string) => {
+      viewportRef.current?.scrollToMessage(itemId);
+    },
+    [viewportRef],
+  );
+
+  const showMessageTrail =
+    isWeb &&
+    !isMobile &&
+    isWideEnoughForTrail &&
+    messageTrailItems.length > 1 &&
+    trailAnchorStore !== null;
+
+  return {
+    messageTrailItems,
+    trailItemIds,
+    trailAnchorStore,
+    handleRootLayout,
+    handleJumpToMessage,
+    showMessageTrail,
+  };
 }
 
 const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamViewProps>(
@@ -543,6 +612,22 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
         streamRenderStrategy,
       ],
     );
+    // Message-trail rail (web/desktop only). Extracted into a hook to keep this component's
+    // complexity in check; it derives ticks, owns the anchor store, and gates on pane width.
+    const {
+      messageTrailItems,
+      trailItemIds,
+      trailAnchorStore,
+      handleRootLayout,
+      handleJumpToMessage,
+      showMessageTrail,
+    } = useMessageTrail({
+      tail: effectiveStreamItems,
+      head: effectiveStreamHead,
+      isMobile,
+      viewportRef,
+    });
+
     useImperativeHandle(
       ref,
       () => ({
@@ -551,6 +636,9 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
         },
         prepareForViewportChange() {
           viewportRef.current?.prepareForViewportChange();
+        },
+        scrollToMessage(itemId: string) {
+          viewportRef.current?.scrollToMessage(itemId);
         },
       }),
       [],
@@ -667,6 +755,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               detail={data.detail}
               cwd={agent.cwd}
               metadata={data.metadata}
+              provider={agent.provider}
               isLastInSequence={layoutItem.isLastInToolSequence}
               onOpenFilePath={handleToolCallOpenFile}
             />
@@ -682,12 +771,13 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
             args={data.arguments}
             result={data.result}
             status={data.status}
+            provider={agent.provider}
             isLastInSequence={layoutItem.isLastInToolSequence}
             onOpenFilePath={handleToolCallOpenFile}
           />
         );
       },
-      [agent.cwd, setInlineDetailsExpanded, handleToolCallOpenFile],
+      [agent.cwd, agent.provider, setInlineDetailsExpanded, handleToolCallOpenFile],
     );
 
     const renderStreamItemContent = useCallback(
@@ -880,7 +970,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
 
     return (
       <ToolCallSheetProvider>
-        <View style={stylesheet.container}>
+        <View style={stylesheet.container} onLayout={handleRootLayout}>
           <MessageOuterSpacingProvider disableOuterSpacing>
             {streamRenderStrategy.render({
               agentId,
@@ -899,8 +989,17 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               listStyle: stylesheet.list,
               baseListContentContainerStyle: stylesheet.listContentContainer,
               forwardListContentContainerStyle: stylesheet.forwardListContentContainer,
+              trailItemIds: showMessageTrail ? trailItemIds : undefined,
+              trailAnchor: showMessageTrail ? (trailAnchorStore ?? undefined) : undefined,
             })}
           </MessageOuterSpacingProvider>
+          {showMessageTrail && trailAnchorStore ? (
+            <MessageTrailRail
+              items={messageTrailItems}
+              anchor={trailAnchorStore}
+              onJumpToMessage={handleJumpToMessage}
+            />
+          ) : null}
           {!isNearBottom && (
             <Animated.View
               style={stylesheet.scrollToBottomContainer}
@@ -1486,14 +1585,22 @@ const permissionStyles = StyleSheet.create((theme) => ({
 const optionTextPrimaryStyle = [permissionStyles.optionText, permissionStyles.optionTextPrimary];
 
 interface StreamItemWrapperProps {
+  itemId: string;
   gapBelow: number;
   children: ReactNode;
 }
 
-function StreamItemWrapper({ gapBelow, children }: StreamItemWrapperProps) {
+function StreamItemWrapper({ itemId, gapBelow, children }: StreamItemWrapperProps) {
   const wrapperStyle = useMemo(
     () => [stylesheet.streamItemWrapper, { marginBottom: gapBelow }],
     [gapBelow],
   );
-  return <View style={wrapperStyle}>{children}</View>;
+  // `nativeID` maps to a DOM `id` on react-native-web (inert on native), so mounted
+  // rows are addressable via document.getElementById(`stream-item-${itemId}`) for
+  // scrollToMessage on web.
+  return (
+    <View style={wrapperStyle} nativeID={`stream-item-${itemId}`}>
+      {children}
+    </View>
+  );
 }

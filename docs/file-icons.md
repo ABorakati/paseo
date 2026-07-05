@@ -15,7 +15,8 @@ This file is auto-generated. Do not edit it by hand.
 - `SVG_ICONS` maps icon names (e.g. `"typescript"`) to raw SVG strings
 - `EXTENSION_TO_ICON` maps file extensions (e.g. `"ts"`) to icon names
 - `getFileIconSvg(fileName)` returns the SVG string for a given filename, falling back to a generic file icon
-- `packages/app/src/components/file-explorer-pane.tsx` is the only consumer; it renders the SVG with `SvgXml` from `react-native-svg`
+- `getNamedIconSvg(name)` returns the SVG string for a raw icon name in `SVG_ICONS` (e.g. `"git"`, `"console"`, `"http"`), or `null` if the name isn't in the map — bypasses the extension lookup entirely. Used by UI that needs a specific themed icon by name rather than by filename (e.g. coloured tool-call icons: `git` for git commands, `http` for web fetch/search, `console` for shell commands).
+- `packages/app/src/components/file-explorer-pane.tsx` is the primary consumer of `getFileIconSvg`; it renders the SVG with `SvgXml` from `react-native-svg`
 
 ## Adding a new icon
 
@@ -51,7 +52,7 @@ cat node_modules/material-icon-theme/icons/ICON_NAME.svg
 
 ## Currently included icons
 
-53 unique icons covering these extensions:
+55 unique icons covering these extensions:
 
 | Extension(s)                               | Icon        |
 | ------------------------------------------ | ----------- |
@@ -108,3 +109,5 @@ cat node_modules/material-icon-theme/icons/ICON_NAME.svg
 | `lock`                                     | lock        |
 | `groovy`                                   | groovy      |
 | `gradle`                                   | gradle      |
+
+`git` and `http` are also included in `SVG_ICONS` but are not mapped from any file extension — they're fetched directly via `getNamedIconSvg("git")` / `getNamedIconSvg("http")` for coloured icons in the chat UI (git commands, web fetch/search).

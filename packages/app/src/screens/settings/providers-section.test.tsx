@@ -154,6 +154,8 @@ vi.mock("@/components/ui/loading-spinner", () => ({
 vi.mock("@/components/provider-icons", () => ({
   getProviderIcon: (provider: string) => () =>
     React.createElement("span", { "data-icon": `provider-${provider}` }),
+  getBrandedProviderIcon: (provider: string) => () =>
+    React.createElement("span", { "data-icon": `provider-${provider}` }),
 }));
 
 vi.mock("@/stores/provider-settings-store", () => ({

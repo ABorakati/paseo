@@ -57,14 +57,20 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient as SvgLinearGradient,
+  Rect,
+  Stop,
+  SvgXml,
+} from "react-native-svg";
 import { CODE_SURFACE_DATASET } from "@/styles/code-surface";
 import { MarkdownRenderer, type MarkdownStyles } from "@/components/markdown/renderer";
 import type { TodoEntry, UserMessageImageAttachment } from "@/types/stream";
 import type { AgentAttachment } from "@getpaseo/protocol/messages";
 import type { ToolCallDetail } from "@getpaseo/protocol/agent-types";
 import { buildToolCallPresentation } from "@/tool-calls/presentation";
-import { resolveToolCallIcon } from "@/utils/tool-call-icon";
+import { resolveToolCallIcon, type ResolvedToolCallVisual } from "@/utils/tool-call-icon";
 import { getMarkdownListMarker, getMarkdownListSpacing } from "@/utils/markdown-list";
 import { markdownNodeContainsType } from "@/utils/markdown-ast";
 import { useStableEvent } from "@/hooks/use-stable-event";
@@ -2326,7 +2332,7 @@ export const TodoListCard = memo(function TodoListCard({
     <ExpandableBadge
       label={t("message.todo.title")}
       secondaryLabel={nextTask}
-      icon={CheckSquare}
+      icon={TODO_BADGE_ICON}
       isExpanded={isExpanded}
       onToggle={handleToggle}
       renderDetails={renderDetails}
@@ -2335,10 +2341,12 @@ export const TodoListCard = memo(function TodoListCard({
   );
 });
 
+const TODO_BADGE_ICON: ResolvedToolCallVisual = { kind: "component", Component: CheckSquare };
+
 interface ExpandableBadgeProps {
   label: string;
   secondaryLabel?: string;
-  icon?: ComponentType<{ size?: number; color?: string }>;
+  icon?: ResolvedToolCallVisual;
   isExpanded: boolean;
   style?: StyleProp<ViewStyle>;
   onToggle?: () => void;
@@ -2547,19 +2555,38 @@ function ExpandableBadgeLabelRow({
 const LUCIDE_TOOL_ICON_NUDGE_LEFT: ViewStyle = { marginLeft: -1 };
 const LUCIDE_CHEVRON_NUDGE_LEFT: ViewStyle = { marginLeft: -4 };
 
+// Rest-state opacity for pre-coloured SVG tool icons so their colour stays
+// quiet on the rail (docs/design.md); active/hover renders them at full.
+const SVG_TOOL_ICON_REST_OPACITY = 0.85;
+
 function renderExpandableBadgeIcon({
   isError,
   isActive,
   ThemedIcon,
+  svgXml,
 }: {
   isError: boolean;
   isActive: boolean;
   ThemedIcon: ComponentType<{ size?: number; uniProps?: typeof foregroundColorMapping }> | null;
+  svgXml: string | null;
 }): ReactNode {
+  // Error state (triangle) always takes precedence over any content icon.
   if (isError) {
     return (
       <View style={LUCIDE_TOOL_ICON_NUDGE_LEFT}>
         <ThemedTriangleAlertIcon size={12} opacity={0.8} uniProps={destructiveColorMapping} />
+      </View>
+    );
+  }
+  if (svgXml) {
+    return (
+      <View style={LUCIDE_TOOL_ICON_NUDGE_LEFT}>
+        <SvgXml
+          xml={svgXml}
+          width={12}
+          height={12}
+          opacity={isActive ? 1 : SVG_TOOL_ICON_REST_OPACITY}
+        />
       </View>
     );
   }
@@ -2933,8 +2960,13 @@ const ExpandableBadge = memo(function ExpandableBadge({
     [isExpanded],
   );
 
-  const ThemedIcon = useMemo(() => (icon ? withUnistyles(icon) : null), [icon]);
-  const iconNode = renderExpandableBadgeIcon({ isError, isActive, ThemedIcon });
+  const iconComponent = icon?.kind === "component" ? icon.Component : null;
+  const svgXml = icon?.kind === "svg" ? icon.xml : null;
+  const ThemedIcon = useMemo(
+    () => (iconComponent ? withUnistyles(iconComponent) : null),
+    [iconComponent],
+  );
+  const iconNode = renderExpandableBadgeIcon({ isError, isActive, ThemedIcon, svgXml });
   const iconSlotNode = renderExpandableBadgeIconSlot({
     showChevron: isInteractive && isHovered,
     chevronStyle,
@@ -3033,6 +3065,7 @@ interface ToolCallProps {
   detail?: ToolCallDetail;
   cwd?: string;
   metadata?: Record<string, unknown>;
+  provider?: string;
   isLastInSequence?: boolean;
   disableOuterSpacing?: boolean;
   onInlineDetailsHoverChange?: (hovered: boolean) => void;
@@ -3049,6 +3082,7 @@ export const ToolCall = memo(function ToolCall({
   detail,
   cwd,
   metadata,
+  provider,
   isLastInSequence = false,
   disableOuterSpacing,
   onInlineDetailsHoverChange,
@@ -3083,9 +3117,10 @@ export const ToolCall = memo(function ToolCall({
         detail: effectiveDetail,
         metadata,
         cwd,
+        provider,
         resolveIcon: resolveToolCallIcon,
       }),
-    [toolName, status, error, effectiveDetail, metadata, cwd],
+    [toolName, status, error, effectiveDetail, metadata, cwd, provider],
   );
   const handleOpenFile = useMemo(() => {
     const openFilePath = presentation.openFilePath;
@@ -3102,7 +3137,7 @@ export const ToolCall = memo(function ToolCall({
         summary: presentation.summary,
         detail: effectiveDetail,
         errorText: presentation.errorText,
-        icon: presentation.icon,
+        icon: presentation.iconVisual,
         showLoadingSkeleton: presentation.isLoadingDetails,
       });
     } else {
@@ -3114,7 +3149,7 @@ export const ToolCall = memo(function ToolCall({
     presentation.displayName,
     presentation.summary,
     presentation.errorText,
-    presentation.icon,
+    presentation.iconVisual,
     presentation.isLoadingDetails,
     effectiveDetail,
   ]);
@@ -3174,7 +3209,7 @@ export const ToolCall = memo(function ToolCall({
       testID="tool-call-badge"
       label={presentation.displayName}
       secondaryLabel={presentation.summary}
-      icon={presentation.icon}
+      icon={presentation.iconVisual}
       isExpanded={!isMobile && isExpanded}
       onToggle={presentation.canOpenDetails ? handleToggle : undefined}
       onOpenFile={handleOpenFile}
@@ -3197,6 +3232,7 @@ function areToolCallPropsEqual(previous: ToolCallProps, next: ToolCallProps) {
   if (previous.detail !== next.detail) return false;
   if (previous.cwd !== next.cwd) return false;
   if (previous.metadata !== next.metadata) return false;
+  if (previous.provider !== next.provider) return false;
   if (previous.isLastInSequence !== next.isLastInSequence) return false;
   if (previous.disableOuterSpacing !== next.disableOuterSpacing) return false;
   if (previous.onOpenFilePath !== next.onOpenFilePath) return false;

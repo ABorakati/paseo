@@ -6,7 +6,7 @@ import {
   getTerminalProfileIcon,
   resolveTerminalProfiles,
 } from "@getpaseo/protocol/terminal-profiles";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { useDaemonConfig } from "@/hooks/use-daemon-config";
 import type { Theme } from "@/styles/theme";
 import { pinnedTargetKey, type PinnedTabTarget } from "@/workspace-pins/target";
@@ -39,7 +39,7 @@ function ProviderPinIcon({
   size: number;
   color?: string;
 }) {
-  const Icon = getProviderIcon(iconKey);
+  const Icon = getBrandedProviderIcon(iconKey);
   return <Icon size={size} color={color} />;
 }
 

@@ -13,7 +13,7 @@ import {
   type AcpProviderCatalogItem,
 } from "@/hooks/use-acp-provider-catalog";
 import { ProviderCatalogList } from "@/components/provider-catalog-list";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSection } from "@/screens/settings/settings-section";
@@ -80,7 +80,7 @@ function ProviderRow({
 }: ProviderRowProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
-  const ProviderIcon = getProviderIcon(def.id);
+  const ProviderIcon = getBrandedProviderIcon(def.id);
   const providerError =
     enabled &&
     entry.status === "error" &&

@@ -71,3 +71,53 @@ export function getProviderIcon(provider: string): ProviderIconComponent {
   }
   return Bot;
 }
+
+// Brand colors for providers whose mark has a real, both-theme-safe brand
+// color. Anthropic's clay/orange (claude) and MiniMax's red both read
+// cleanly on light and dark surfaces, so those providers render in brand
+// color everywhere instead of theme-muted foreground.
+//
+// Everything else here is a monochrome logomark (codex, opencode, copilot,
+// pi, omp) or a generic Lucide fallback (kiro) with no brand color baked
+// into the shape — those stay theme-tinted so they don't vanish in dark
+// mode. ACP catalog icons render from `currentColor` SVG strings and are
+// intentionally excluded for the same reason.
+const PROVIDER_BRAND_COLORS: Record<string, string> = {
+  claude: "#D97757",
+  minimax: "#F23F5D",
+};
+
+const brandedProviderIconCache = new Map<string, ProviderIconComponent>();
+
+function normalizeProviderId(provider: string | null | undefined): string {
+  return (provider ?? "").trim().toLowerCase();
+}
+
+function createBrandedProviderIcon(provider: string, normalizedId: string): ProviderIconComponent {
+  const BrandedProviderIcon: ProviderIconComponent = ({ size, color }) => {
+    const Icon = getProviderIcon(provider);
+    const brandColor = PROVIDER_BRAND_COLORS[normalizedId] ?? color;
+    return createElement(Icon, { size, color: brandColor });
+  };
+  BrandedProviderIcon.displayName = `BrandedProviderIcon(${provider})`;
+  return BrandedProviderIcon;
+}
+
+/**
+ * Drop-in replacement for `getProviderIcon` that renders providers with a
+ * real brand color (see `PROVIDER_BRAND_COLORS`) in that color everywhere,
+ * and falls back to the caller-supplied `color` (typically a theme-muted
+ * foreground) for every other provider. Same `{size, color}` component
+ * signature as `getProviderIcon`, memoised per provider id.
+ */
+export function getBrandedProviderIcon(provider: string | null | undefined): ProviderIconComponent {
+  const normalizedId = normalizeProviderId(provider);
+  const cacheKey = provider ?? "";
+  const cached = brandedProviderIconCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  const icon = createBrandedProviderIcon(provider ?? "", normalizedId);
+  brandedProviderIconCache.set(cacheKey, icon);
+  return icon;
+}

@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View, type PressableStateCallbackType } fr
 import { useTranslation } from "react-i18next";
 import { Archive, ChevronDown, ChevronRight, Unlink } from "lucide-react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsCompactFormFactor, MAX_CONTENT_WIDTH } from "@/constants/layout";
 import { isNative } from "@/constants/platform";
@@ -37,7 +37,7 @@ const SUBAGENTS_LIST_MAX_HEIGHT = 200;
 function buildRowPresentation(row: SubagentRow): WorkspaceTabPresentation {
   return {
     ...buildSubagentRowPresentationData(row),
-    icon: getProviderIcon(row.provider),
+    icon: getBrandedProviderIcon(row.provider),
   };
 }
 

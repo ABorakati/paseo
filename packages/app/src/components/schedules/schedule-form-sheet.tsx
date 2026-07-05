@@ -20,7 +20,7 @@ import {
 import { Combobox, ComboboxItem, type ComboboxOption } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { CombinedModelSelector } from "@/components/combined-model-selector";
-import { getProviderIcon } from "@/components/provider-icons";
+import { getBrandedProviderIcon } from "@/components/provider-icons";
 import { CadenceEditor } from "@/components/schedules/cadence-editor";
 import { useScheduleMutations } from "@/hooks/use-schedule-mutations";
 import { useAgentFormState, type FormInitialValues } from "@/hooks/use-agent-form-state";
@@ -814,7 +814,7 @@ function ProviderGlyph({ provider }: { provider: string | null }): ReactElement 
   if (!provider) {
     return null;
   }
-  const Icon = getProviderIcon(provider);
+  const Icon = getBrandedProviderIcon(provider);
   return <Icon size={16} color={styles.providerIcon.color} />;
 }
 
