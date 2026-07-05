@@ -37,6 +37,7 @@ import { OpenCodeAgentClient } from "./providers/opencode-agent.js";
 import { PiRpcAgentClient } from "./providers/pi/agent.js";
 import { MockLoadTestAgentClient } from "./providers/mock-load-test-agent.js";
 import { MockSlowProviderClient } from "./providers/mock-slow-provider.js";
+import { AntigravityAgentClient } from "./providers/antigravity/agent.js";
 import {
   AGENT_PROVIDER_DEFINITIONS,
   BUILTIN_PROVIDER_IDS,
@@ -141,6 +142,7 @@ const PROVIDER_CLIENT_FACTORIES: Record<string, ProviderClientFactory> = {
       runtimeSettings,
       providerParams: options?.providerParams,
     }),
+  antigravity: (logger, runtimeSettings) => new AntigravityAgentClient(logger, runtimeSettings),
   omp: (logger, runtimeSettings, options) =>
     new PiRpcAgentClient({
       logger,

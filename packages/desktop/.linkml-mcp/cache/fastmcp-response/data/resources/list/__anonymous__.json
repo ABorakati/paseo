@@ -1,0 +1,152 @@
+{
+  "created_at": "2026-06-01T14:18:32.073099+00:00",
+  "expires_at": "2026-06-01T14:19:02.073099+00:00",
+  "value": {
+    "items": [
+      {
+        "annotations": null,
+        "description": "Step-by-step workflow guide for all LinkML-MCP scenarios. Read this first in any new project.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "quickstart_guide",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://linkml/quickstart",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "How agents should choose between ripgrep discovery, yq, semantic schema tools, and patch tools.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "decision_matrix",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://linkml/decision-matrix",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "Common optional terminology workflows for exact_mappings review.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "terminology_workflows",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://linkml/terminology-workflows",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "Return the SKILL.md file content if generated; otherwise dynamically generate it.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "get_project_skill_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://project/skill",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "Return the ARCHITECTURE.md file content if generated; otherwise return an instructional guide.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "get_project_architecture_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://project/architecture",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "JSON resource exposing project name, root, schema file, yq path, and terminology providers.\n\nUseful for debugging project configuration and confirming terminology setup.",
+        "icons": null,
+        "meta": null,
+        "mime_type": "application/json",
+        "name": "project_profile_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://project/linkml-profile",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "LinkML core framework documentation (README + docs/ folder content).\n\nIncludes ecosystem, examples, and guides from the docs/ folder.\nCached offline-first; run 'python scripts/fetch_docs.py --refresh' if stale (>30 days old).",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "linkml_docs_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://docs/linkml",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "LinkML-Map transformation framework documentation (README + docs/ folder content).\n\nIncludes transformation syntax, CLI usage, and advanced patterns from the docs/ folder.\nCached offline-first; run 'python scripts/fetch_docs.py --refresh' if stale (>30 days old).",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "linkml_map_docs_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://docs/linkml-map",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "LinkML Schema Automator documentation (README + docs/ folder content).\n\nIncludes LinkML-MCP tool guidance, CLI reference, schema generalization, and\nannotation workflows from the docs/ folder.\nCached offline-first; run 'python scripts/fetch_docs.py --refresh' if stale (>30 days old).",
+        "icons": null,
+        "meta": null,
+        "mime_type": "text/markdown",
+        "name": "schema_automator_docs_resource",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "resource://docs/schema-automator",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": null,
+        "icons": null,
+        "meta": { "ui": { "csp": { "resourceDomains": ["https://cdn.jsdelivr.net"] } } },
+        "mime_type": "text/html;profile=mcp-app",
+        "name": "Prefab Renderer (show_omop_mapping_review)",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "ui://prefab/tool/ce0ac0cc8a86/renderer.html",
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": null,
+        "icons": null,
+        "meta": { "ui": { "csp": { "resourceDomains": ["https://cdn.jsdelivr.net"] } } },
+        "mime_type": "text/html;profile=mcp-app",
+        "name": "Prefab Renderer (file_manager)",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "uri": "ui://prefab/tool/94821d417ef4/renderer.html",
+        "version": null
+      }
+    ]
+  },
+  "version": 1
+}

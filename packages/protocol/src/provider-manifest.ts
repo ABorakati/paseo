@@ -220,6 +220,13 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     defaultModeId: null,
     modes: [],
   },
+  {
+    id: "antigravity",
+    label: "Antigravity",
+    description: "Google Antigravity agent with seamless OAuth support",
+    defaultModeId: null,
+    modes: [],
+  },
 ];
 
 export const DEV_AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [

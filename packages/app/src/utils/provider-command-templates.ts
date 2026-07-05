@@ -26,6 +26,7 @@ export const PROVIDER_COMMAND_TEMPLATES: Record<
   opencode: {
     resume: "opencode --session {sessionId}",
   },
+  antigravity: {},
 };
 
 function renderTemplate(template: string, vars: Record<string, string>): string {

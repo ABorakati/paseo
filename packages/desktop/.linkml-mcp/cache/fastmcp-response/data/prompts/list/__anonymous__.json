@@ -1,0 +1,37 @@
+{
+  "created_at": "2026-06-01T14:18:01.763873+00:00",
+  "expires_at": "2026-06-01T14:23:01.763873+00:00",
+  "value": {
+    "items": [
+      {
+        "arguments": [
+          {
+            "description": "Provide as a JSON string matching the following schema: {\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}",
+            "name": "project_root",
+            "required": false
+          }
+        ],
+        "description": "Dynamic skill context for the current project. Guides schema edits, routing, and concept mapping.",
+        "icons": null,
+        "meta": null,
+        "name": "project_skill",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "version": null
+      },
+      {
+        "arguments": [],
+        "description": "Interview questions to collect project architectural decisions (ADRs).",
+        "icons": null,
+        "meta": null,
+        "name": "architecture_interview",
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "title": null,
+        "version": null
+      }
+    ]
+  },
+  "version": 1
+}

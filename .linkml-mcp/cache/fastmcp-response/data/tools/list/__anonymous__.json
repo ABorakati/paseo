@@ -1,0 +1,117 @@
+{
+  "created_at": "2026-06-01T20:46:38.381329+00:00",
+  "expires_at": "2026-06-01T20:47:08.381329+00:00",
+  "value": {
+    "items": [
+      {
+        "annotations": null,
+        "description": "Search for available tools by query.\n\nReturns matching tools ranked by relevance.",
+        "execution": null,
+        "icons": null,
+        "meta": null,
+        "name": "search",
+        "output_schema": {
+          "properties": { "result": { "type": "string" } },
+          "required": ["result"],
+          "type": "object",
+          "x-fastmcp-wrap-result": true
+        },
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "detail": {
+              "default": "brief",
+              "description": "'brief' for names and descriptions, 'detailed' for parameter schemas as markdown, 'full' for complete JSON schemas",
+              "enum": ["brief", "detailed", "full"],
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "default": null,
+              "description": "Maximum number of results to return"
+            },
+            "query": { "description": "Search query to find available tools", "type": "string" },
+            "tags": {
+              "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+              "default": null,
+              "description": "Filter to tools with any of these tags before searching"
+            }
+          },
+          "required": ["query"],
+          "type": "object"
+        },
+        "serializer": null,
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "timeout": null,
+        "title": null,
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "Get parameter schemas for specific tools.\n\nUse after searching to get the detail needed to call a tool.",
+        "execution": null,
+        "icons": null,
+        "meta": null,
+        "name": "get_schema",
+        "output_schema": {
+          "properties": { "result": { "type": "string" } },
+          "required": ["result"],
+          "type": "object",
+          "x-fastmcp-wrap-result": true
+        },
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "detail": {
+              "default": "detailed",
+              "description": "'brief' for names and descriptions, 'detailed' for parameter schemas as markdown, 'full' for complete JSON schemas",
+              "enum": ["brief", "detailed", "full"],
+              "type": "string"
+            },
+            "tools": {
+              "description": "List of tool names to get schemas for",
+              "items": { "type": "string" },
+              "type": "array"
+            }
+          },
+          "required": ["tools"],
+          "type": "object"
+        },
+        "serializer": null,
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "timeout": null,
+        "title": null,
+        "version": null
+      },
+      {
+        "annotations": null,
+        "description": "Chain `await call_tool(...)` calls in one Python block; prefer returning the final answer from a single block.\nUse `return` to produce output.\nOnly `call_tool(tool_name: str, params: dict) -> Any` is available in scope.",
+        "execution": null,
+        "icons": null,
+        "meta": null,
+        "name": "execute",
+        "output_schema": null,
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Python async code to execute tool calls via call_tool(name, arguments)",
+              "type": "string"
+            }
+          },
+          "required": ["code"],
+          "type": "object"
+        },
+        "serializer": null,
+        "tags": [],
+        "task_config": { "mode": "forbidden", "poll_interval": "PT5S" },
+        "timeout": null,
+        "title": null,
+        "version": null
+      }
+    ]
+  },
+  "version": 1
+}
