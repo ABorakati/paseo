@@ -16,57 +16,29 @@ const ThemedListIcon = withUnistyles(ListTree);
 const iconRestMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
 const iconActiveMapping = (theme: Theme) => ({ color: theme.colors.foreground });
 
-function normalize(value: string): string {
-  return value.trim().toLowerCase();
-}
+const TOC_HEADER: SheetHeader = { title: "Jump to message" };
 
 // Floating table of contents shown in place of the tick rail when the pane is too narrow.
-// A small bottom-left button opens a searchable list of the conversation's user messages;
-// picking one scrolls the chat to it.
+// A small bottom-right button opens a plain list of the conversation's user messages;
+// picking one scrolls the chat to it. (Search is intentionally left out — it belongs to a
+// separate, dedicated search feature.)
 export function MessageTrailToc({ items, onJumpToMessage }: MessageTrailTocProps) {
   const anchorRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const allOptions = useMemo<ComboboxOption[]>(
+  const options = useMemo<ComboboxOption[]>(
     () => items.map((item) => ({ id: item.id, label: item.preview || `Message ${item.ordinal}` })),
     [items],
   );
-  const options = useMemo<ComboboxOption[]>(() => {
-    const query = normalize(searchQuery);
-    if (!query) {
-      return allOptions;
-    }
-    return allOptions.filter((option) => option.label.toLowerCase().includes(query));
-  }, [allOptions, searchQuery]);
-
-  const handleOpenChange = useCallback((next: boolean) => {
-    setOpen(next);
-    if (!next) {
-      setSearchQuery("");
-    }
-  }, []);
 
   const handleToggle = useCallback(() => setOpen((previous) => !previous), []);
 
   const handleSelect = useCallback(
     (id: string) => {
       onJumpToMessage(id);
-      handleOpenChange(false);
+      setOpen(false);
     },
-    [onJumpToMessage, handleOpenChange],
-  );
-
-  const header = useMemo<SheetHeader>(
-    () => ({
-      title: "Jump to message",
-      search: {
-        onChange: setSearchQuery,
-        placeholder: "Search messages",
-        testID: "message-trail-toc-search",
-      },
-    }),
-    [],
+    [onJumpToMessage],
   );
 
   const buttonStyle = useCallback(
@@ -98,12 +70,11 @@ export function MessageTrailToc({ items, onJumpToMessage }: MessageTrailTocProps
         value=""
         onSelect={handleSelect}
         open={open}
-        onOpenChange={handleOpenChange}
+        onOpenChange={setOpen}
         anchorRef={anchorRef}
         desktopPlacement="top-start"
         desktopMinWidth={280}
-        header={header}
-        emptyText="No matching messages"
+        header={TOC_HEADER}
       />
     </>
   );
@@ -112,7 +83,7 @@ export function MessageTrailToc({ items, onJumpToMessage }: MessageTrailTocProps
 const styles = StyleSheet.create((theme) => ({
   floating: {
     position: "absolute",
-    left: theme.spacing[3],
+    right: theme.spacing[3],
     bottom: theme.spacing[4],
   },
   button: {

@@ -1009,9 +1009,6 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               onJumpToMessage={handleJumpToMessage}
             />
           ) : null}
-          {showMessageTrailToc ? (
-            <MessageTrailToc items={messageTrailItems} onJumpToMessage={handleJumpToMessage} />
-          ) : null}
           {!isNearBottom && (
             <Animated.View
               style={stylesheet.scrollToBottomContainer}
@@ -1031,6 +1028,11 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
               </View>
             </Animated.View>
           )}
+          {/* Rendered last so it stacks above the (full-width) scroll-to-bottom overlay,
+              which would otherwise swallow the button's clicks when scrolled up. */}
+          {showMessageTrailToc ? (
+            <MessageTrailToc items={messageTrailItems} onJumpToMessage={handleJumpToMessage} />
+          ) : null}
         </View>
       </ToolCallSheetProvider>
     );
