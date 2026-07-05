@@ -21,15 +21,19 @@ export interface MessageTrailRailProps {
   onJumpToMessage: (id: string) => void;
 }
 
-// Geometry (px). Ticks are right-anchored and grow leftward into the gutter on hover
-// (never toward the text). The rail region sits in the left gutter, centered midway
-// between the pane's left edge and the content column (see resolveRailLeft).
-const RAIL_WIDTH = 30;
+// Geometry (px). Ticks are center-anchored and grow symmetrically on hover; the tick
+// column is centered in the left gutter (see resolveRailLeft), so the rail fits in a
+// narrower gutter than a left/right-anchored one would.
+const RAIL_WIDTH = 24;
 const TICK_HEIGHT = 2;
 const TICK_HEIGHT_HOVER = 4; // hovered tick reads thicker, not just longer
 const TICK_BASE_WIDTH = 6;
-const TICK_MAX_WIDTH = 30;
-const TICK_SPACING = 10; // center-to-center
+const TICK_MAX_WIDTH = 24;
+// Tick spacing is dynamic: at the default when there's room, compressed toward the minimum
+// so hundreds of ticks still fit the available height (a minimap) rather than overflowing.
+// The magnification is the "accordion" that expands a compressed region on hover.
+const DEFAULT_TICK_SPACING = 10; // center-to-center when there's room
+const MIN_TICK_SPACING = 3; // floor when compressing many ticks to fit
 const REDUCED_MOTION_HOVER_WIDTH = 16;
 const RAIL_HEIGHT_FRACTION = 0.8; // tick column capped at 80% of rail height
 // Never let the rail region's left edge get closer than this to the pane edge.
@@ -40,20 +44,18 @@ const RAIL_NUDGE_LEFT = 8;
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
 
-// Position the rail so a resting tick sits centered on the midpoint of the left gutter —
-// halfway between the pane's left edge and the centered content column. Ticks are
-// right-anchored, so offset by half a resting tick to center that. Returns null when the
-// pane isn't measured yet (fall back to the static left:0) so the rail still paints on
-// the first frame.
+// Center the (center-anchored) tick column on the midpoint of the left gutter — halfway
+// between the pane's left edge and the centered content column, biased a touch toward the
+// pane edge. Returns null when the pane isn't measured yet (fall back to the static left:0)
+// so the rail still paints on the first frame.
 function resolveRailLeft(paneWidth: number): number | null {
   if (paneWidth <= 0) {
     return null;
   }
   const contentWidth = Math.min(paneWidth, MAX_CONTENT_WIDTH);
-  const gutterLeft = (paneWidth - contentWidth) / 2;
-  const gutterCenter = gutterLeft / 2;
-  const ticksRightEdge = gutterCenter + TICK_BASE_WIDTH / 2 - RAIL_NUDGE_LEFT;
-  return Math.max(RAIL_EDGE_MIN, ticksRightEdge - RAIL_WIDTH);
+  const gutterWidth = (paneWidth - contentWidth) / 2;
+  const gutterCenter = gutterWidth / 2;
+  return Math.max(RAIL_EDGE_MIN, gutterCenter - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT);
 }
 
 // Opacity states, quietest to loudest.
@@ -73,19 +75,34 @@ const RAIL_DIV_STYLE: CSSProperties = {
   maxHeight: `${RAIL_HEIGHT_FRACTION * 100}%`,
   display: "flex",
   flexDirection: "column",
-  alignItems: "flex-end",
+  alignItems: "center",
   justifyContent: "center",
   overflowY: "hidden",
   cursor: "pointer",
 };
 
-// Gaussian magnification. Sigma is deliberately tight (half the tick spacing) so the
+// Gaussian magnification. Sigma is a tight fraction of the (dynamic) tick spacing so the
 // highlight focuses on the single hovered tick — a wider sigma lights up every neighbour,
-// which with only a handful of ticks reads as "all of them turned white".
-const SIGMA = 0.5 * TICK_SPACING;
-const TWO_SIGMA_SQ = 2 * SIGMA * SIGMA;
+// which with only a handful of ticks reads as "all of them turned white". Scaling with the
+// spacing keeps the focus window ~half a tick wide even when the ticks are compressed.
+const SIGMA_FRACTION = 0.5;
 // Below this weight the tick is effectively unmagnified; skip the write.
 const MAGNIFY_ACTIVATION = 0.02;
+
+function twoSigmaSqFor(spacing: number): number {
+  const sigma = SIGMA_FRACTION * spacing;
+  return 2 * sigma * sigma;
+}
+
+// Compress the tick spacing so `count` ticks fit within `availableHeight` (a minimap),
+// down to a readable floor — falling back to the default when there's plenty of room.
+function resolveTickSpacing(count: number, availableHeight: number): number {
+  if (count <= 1 || availableHeight <= 0) {
+    return DEFAULT_TICK_SPACING;
+  }
+  const fitSpacing = (availableHeight - TICK_HEIGHT) / (count - 1);
+  return Math.min(DEFAULT_TICK_SPACING, Math.max(MIN_TICK_SPACING, fitSpacing));
+}
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -125,7 +142,13 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
   });
 
   const count = items.length;
-  const columnHeight = Math.max(0, (count - 1) * TICK_SPACING + TICK_HEIGHT);
+  // Compress ticks to fit the available rail height when there are many messages.
+  const availableHeight = paneSize.height > 0 ? paneSize.height * RAIL_HEIGHT_FRACTION : 0;
+  const spacing = resolveTickSpacing(count, availableHeight);
+  // Latest spacing for imperative pointer callbacks (magnification, click) without re-binding.
+  const spacingRef = useRef(spacing);
+  spacingRef.current = spacing;
+  const columnHeight = Math.max(0, (count - 1) * spacing + TICK_HEIGHT);
 
   // Keep the refs array length in sync with items without reallocating on every render.
   if (tickRefs.current.length !== count) {
@@ -167,6 +190,8 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
     const snapshot = lastSnapshotRef.current;
     const list = itemsRef.current;
     const reducedMotion = reducedMotionRef.current;
+    const tickSpacing = spacingRef.current;
+    const twoSigmaSq = twoSigmaSqFor(tickSpacing);
     let nearestIndex = -1;
     let nearestDistance = Number.POSITIVE_INFINITY;
 
@@ -175,7 +200,7 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
       if (!node) {
         continue;
       }
-      const center = index * TICK_SPACING + TICK_HEIGHT / 2;
+      const center = index * tickSpacing + TICK_HEIGHT / 2;
       const distance = Math.abs(pointerY - center);
       if (distance < nearestDistance) {
         nearestDistance = distance;
@@ -187,14 +212,14 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
 
       if (reducedMotion) {
         // No morphing: snap only the nearest-ish tick to a modest fixed width, keep opacity.
-        const isNear = distance <= TICK_SPACING / 2;
+        const isNear = distance <= tickSpacing / 2;
         node.style.width = isNear ? `${REDUCED_MOTION_HOVER_WIDTH}px` : `${TICK_BASE_WIDTH}px`;
         node.style.height = isNear ? `${TICK_HEIGHT_HOVER}px` : `${TICK_HEIGHT}px`;
         node.style.opacity = String(Math.max(baseOpacity, isNear ? OPACITY_FOCUS : baseOpacity));
         continue;
       }
 
-      const weight = Math.exp(-(distance * distance) / TWO_SIGMA_SQ);
+      const weight = Math.exp(-(distance * distance) / twoSigmaSq);
       if (weight < MAGNIFY_ACTIVATION) {
         // Outside the tight focus window: rest geometry, anchor opacity.
         node.style.width = `${TICK_BASE_WIDTH}px`;
@@ -407,10 +432,11 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
       }
       const rect = column.getBoundingClientRect();
       const pointerY = event.clientY - rect.top;
+      const tickSpacing = spacingRef.current;
       let nearestIndex = 0;
       let nearestDistance = Number.POSITIVE_INFINITY;
       for (let index = 0; index < itemsRef.current.length; index += 1) {
-        const center = index * TICK_SPACING + TICK_HEIGHT / 2;
+        const center = index * tickSpacing + TICK_HEIGHT / 2;
         const distance = Math.abs(pointerY - center);
         if (distance < nearestDistance) {
           nearestDistance = distance;
@@ -432,13 +458,13 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
     if (focusIndex === null) {
       return 0;
     }
-    const tickCenter = columnTop + focusIndex * TICK_SPACING + TICK_HEIGHT / 2;
+    const tickCenter = columnTop + focusIndex * spacing + TICK_HEIGHT / 2;
     const maxTop =
       paneSize.height > 0
         ? Math.max(RAIL_EDGE_MIN, paneSize.height - TOOLTIP_BOTTOM_CLEARANCE)
         : Number.POSITIVE_INFINITY;
     return Math.min(maxTop, Math.max(RAIL_EDGE_MIN, tickCenter - TOOLTIP_VERTICAL_NUDGE));
-  }, [focusIndex, columnTop, paneSize.height]);
+  }, [focusIndex, columnTop, paneSize.height, spacing]);
   const tooltipStyle = useMemo(
     () => [styles.tooltip, inlineUnistylesStyle({ top: tooltipTop })],
     [tooltipTop],
@@ -478,6 +504,7 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
               key={item.id}
               index={index}
               item={item}
+              spacing={spacing}
               isRoving={index === rovingIndex}
               reducedMotion={reducedMotion}
               registerRef={registerTickRef}
@@ -512,6 +539,7 @@ export function MessageTrailRail({ items, anchor, onJumpToMessage }: MessageTrai
 interface TrailTickProps {
   index: number;
   item: MessageTrailItem;
+  spacing: number;
   isRoving: boolean;
   reducedMotion: boolean;
   registerRef: (index: number, node: HTMLButtonElement | null) => void;
@@ -527,6 +555,7 @@ interface TrailTickProps {
 const TrailTick = memo(function TrailTick({
   index,
   item,
+  spacing,
   isRoving,
   reducedMotion,
   registerRef,
@@ -546,8 +575,11 @@ const TrailTick = memo(function TrailTick({
   const style = useMemo<CSSProperties>(
     () => ({
       position: "absolute",
-      right: 0,
-      top: index * TICK_SPACING,
+      // Center-anchored: the tick sits at the column's horizontal center and grows
+      // symmetrically as its width is written during magnification.
+      left: "50%",
+      top: index * spacing,
+      transform: "translateX(-50%)",
       height: TICK_HEIGHT,
       width: TICK_BASE_WIDTH,
       padding: 0,
@@ -562,7 +594,7 @@ const TrailTick = memo(function TrailTick({
       transitionProperty: reducedMotion ? "none" : "width, height, opacity",
       transitionDuration: reducedMotion ? "0ms" : "80ms",
     }),
-    [index, reducedMotion],
+    [index, spacing, reducedMotion],
   );
   return (
     <button

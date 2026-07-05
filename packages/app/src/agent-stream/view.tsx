@@ -262,8 +262,9 @@ const EMPTY_STREAM_HEAD: StreamItem[] = [];
 // Below this measured pane width the message-trail rail would crowd the chat, so it stays
 // hidden. Web/desktop only; compact layouts never show it regardless of width.
 // Sized so the centered content column (MAX_CONTENT_WIDTH) still leaves a gutter wide
-// enough for the rail plus a comfortable gap before the text (see message-trail-rail).
-const MESSAGE_TRAIL_MIN_PANE_WIDTH = 960;
+// enough for the centered tick column plus a gap before the text (see message-trail-rail);
+// below this the floating table-of-contents button takes over.
+const MESSAGE_TRAIL_MIN_PANE_WIDTH = 900;
 
 function buildChatHistoryAttachment(input: {
   draftId: string;
