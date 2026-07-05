@@ -21,10 +21,10 @@ export interface MessageTrailRailProps {
   onJumpToMessage: (id: string) => void;
 }
 
-// Geometry (px). Ticks grow rightward toward the chat; the column is centered in a
-// fixed-width rail region that sits in the left gutter, just outside the centered
-// content column (see resolveRailLeft).
-const RAIL_WIDTH = 40;
+// Geometry (px). Ticks are right-anchored and grow leftward into the gutter on hover
+// (never toward the text). The rail region sits in the left gutter, centered midway
+// between the pane's left edge and the content column (see resolveRailLeft).
+const RAIL_WIDTH = 30;
 const TICK_HEIGHT = 2;
 const TICK_HEIGHT_HOVER = 4; // hovered tick reads thicker, not just longer
 const TICK_BASE_WIDTH = 6;
@@ -32,24 +32,25 @@ const TICK_MAX_WIDTH = 30;
 const TICK_SPACING = 10; // center-to-center
 const REDUCED_MOTION_HOVER_WIDTH = 16;
 const RAIL_HEIGHT_FRACTION = 0.8; // tick column capped at 80% of rail height
-// Gap between the ticks' right edge and the content column's left edge.
-const GAP_TO_CONTENT = 18;
 // Never let the rail region's left edge get closer than this to the pane edge.
 const RAIL_EDGE_MIN = 4;
 // Push the tooltip up so it reads centered on the focused tick rather than starting below it.
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
 
-// Place the rail region so the ticks' right edge sits GAP_TO_CONTENT px to the left of
-// the centered content column. Returns null when the pane isn't measured yet (fall back
-// to the static left:0) so the rail still paints on first frame.
+// Position the rail so a resting tick sits centered on the midpoint of the left gutter —
+// halfway between the pane's left edge and the centered content column. Ticks are
+// right-anchored, so offset by half a resting tick to center that. Returns null when the
+// pane isn't measured yet (fall back to the static left:0) so the rail still paints on
+// the first frame.
 function resolveRailLeft(paneWidth: number): number | null {
   if (paneWidth <= 0) {
     return null;
   }
   const contentWidth = Math.min(paneWidth, MAX_CONTENT_WIDTH);
   const gutterLeft = (paneWidth - contentWidth) / 2;
-  const ticksRightEdge = gutterLeft - GAP_TO_CONTENT;
+  const gutterCenter = gutterLeft / 2;
+  const ticksRightEdge = gutterCenter + TICK_BASE_WIDTH / 2;
   return Math.max(RAIL_EDGE_MIN, ticksRightEdge - RAIL_WIDTH);
 }
 
