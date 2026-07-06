@@ -13,20 +13,24 @@ import { measureElement as measureVirtualElement, useVirtualizer } from "@tansta
 import { estimateStreamItemHeight } from "./web-virtualization";
 import type { StreamRenderInput, StreamStrategy, StreamViewportHandle } from "./strategy";
 import { createStreamStrategy } from "./strategy";
+import { useTrailAnchorProbe } from "./use-trail-anchor-probe.web";
+import {
+  AUTO_SCROLL_BOTTOM_THRESHOLD_PX,
+  isScrollContainerAtBottom,
+  isScrollContainerNearBottom,
+  isScrollContainerOverscrolledPastBottom,
+  type ScrollBehaviorLike,
+  syncNearBottom,
+} from "./web-scroll-geometry";
+import { useWebElementScrollbar } from "@/components/use-web-scrollbar";
 
 interface CreateWebStreamStrategyInput {
   isMobileBreakpoint: boolean;
 }
 
-type ScrollBehaviorLike = "auto" | "smooth";
-
 const WEB_BOTTOM_SETTLE_TIMEOUT_MS = 200;
 const USER_SCROLL_DELTA_EPSILON = 1;
-const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 64;
-const AUTO_SCROLL_RESUME_THRESHOLD_PX = 1;
 const HISTORY_START_THRESHOLD_PX = 96;
-import { computeTrailAnchor } from "./message-trail-probe";
-import { useWebElementScrollbar } from "@/components/use-web-scrollbar";
 
 const historyStartSlotStyle: CSSProperties = {
   display: "flex",
@@ -37,27 +41,6 @@ const historyStartSlotStyle: CSSProperties = {
   paddingBottom: 8,
 };
 
-function isScrollContainerNearBottom(
-  scrollContainer: Pick<HTMLElement, "scrollTop" | "clientHeight" | "scrollHeight">,
-  thresholdPx = AUTO_SCROLL_BOTTOM_THRESHOLD_PX,
-): boolean {
-  const threshold = Number.isFinite(thresholdPx)
-    ? Math.max(0, thresholdPx)
-    : AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
-  const { scrollTop, clientHeight, scrollHeight } = scrollContainer;
-  if (![scrollTop, clientHeight, scrollHeight].every(Number.isFinite)) {
-    return true;
-  }
-  const distanceFromBottom = scrollHeight - clientHeight - scrollTop;
-  return distanceFromBottom <= threshold;
-}
-
-function isScrollContainerAtBottom(
-  scrollContainer: Pick<HTMLElement, "scrollTop" | "clientHeight" | "scrollHeight">,
-): boolean {
-  return isScrollContainerNearBottom(scrollContainer, AUTO_SCROLL_RESUME_THRESHOLD_PX);
-}
-
 function scrollElementToBottom(
   scrollContainer: HTMLElement,
   behavior: ScrollBehaviorLike = "auto",
@@ -66,65 +49,6 @@ function scrollElementToBottom(
     top: scrollContainer.scrollHeight,
     behavior,
   });
-}
-
-function syncNearBottom(
-  scrollContainer: HTMLElement | null,
-  onNearBottomChange: (value: boolean) => void,
-): boolean {
-  if (!scrollContainer) {
-    onNearBottomChange(true);
-    return true;
-  }
-  const nextValue = isScrollContainerNearBottom(scrollContainer);
-  onNearBottomChange(nextValue);
-  return nextValue;
-}
-
-function getScrollContainerDistanceFromBottom(
-  scrollContainer: Pick<HTMLElement, "scrollTop" | "clientHeight" | "scrollHeight">,
-): number {
-  return scrollContainer.scrollHeight - scrollContainer.clientHeight - scrollContainer.scrollTop;
-}
-
-function isScrollContainerOverscrolledPastBottom(
-  scrollContainer: Pick<HTMLElement, "scrollTop" | "clientHeight" | "scrollHeight">,
-): boolean {
-  return getScrollContainerDistanceFromBottom(scrollContainer) < 0;
-}
-
-// Fraction of the viewport the target row should sit below the top edge after a jump.
-const SCROLL_TO_MESSAGE_TOP_OFFSET_FRACTION = 0.2;
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return false;
-  }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-// Offset of `element`'s top edge relative to the scroll container's content origin,
-// derived from the current scroll position plus the on-screen delta between the two
-// bounding boxes. Works regardless of intervening offsetParent chains or transforms.
-function getElementTopWithinScrollContainer(
-  scrollContainer: HTMLElement,
-  element: HTMLElement,
-): number {
-  const containerRect = scrollContainer.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  return elementRect.top - containerRect.top + scrollContainer.scrollTop;
-}
-
-function scrollContainerToElementTopOffset(
-  scrollContainer: HTMLElement,
-  element: HTMLElement,
-  behavior: ScrollBehaviorLike,
-): void {
-  const elementTop = getElementTopWithinScrollContainer(scrollContainer, element);
-  const target = elementTop - scrollContainer.clientHeight * SCROLL_TO_MESSAGE_TOP_OFFSET_FRACTION;
-  const maxScrollTop = Math.max(0, scrollContainer.scrollHeight - scrollContainer.clientHeight);
-  const clampedTop = Math.max(0, Math.min(target, maxScrollTop));
-  scrollContainer.scrollTo({ top: clampedTop, behavior });
 }
 
 function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: boolean }) {
@@ -147,15 +71,11 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
   } = props;
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
-  const virtualRowsContainerRef = useRef<HTMLElement | null>(null);
   const handleScrollContainerRef = useCallback((node: HTMLElement | null) => {
     scrollContainerRef.current = node;
   }, []);
   const handleContentRef = useCallback((node: HTMLElement | null) => {
     contentRef.current = node;
-  }, []);
-  const handleVirtualRowsContainerRef = useCallback((node: HTMLDivElement | null) => {
-    virtualRowsContainerRef.current = node;
   }, []);
   const [followOutput, setFollowOutputr] = useState(true);
   const followOutputRef = useRef(followOutput);
@@ -172,10 +92,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
   const pendingAutoScrollTimeoutRef = useRef<number | null>(null);
   const pendingVirtualRowMeasureFramesRef = useRef(new Map<Element, number>());
   const historyStartReadyRef = useRef(false);
-  // Message-trail anchor probe state. One pending rAF at a time; offsets cached per id
-  // and invalidated on virtual total-size changes and container resizes.
-  const trailProbeFrameRef = useRef<number | null>(null);
-  const trailOffsetCacheRef = useRef<Map<string, number>>(new Map());
   const showDesktopWebScrollbar = !isMobileBreakpoint;
   const scrollbarOverlay = useWebElementScrollbar(scrollContainerRef, {
     enabled: showDesktopWebScrollbar,
@@ -314,76 +230,28 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     syncNearBottom(scrollContainer, onNearBottomChange);
   }, [onNearBottomChange]);
 
-  // Keep the latest trail inputs in refs so the scroll probe callback identity is stable
-  // (the scroll listener effect keys off handleDomScroll; we don't want to rebind it when
-  // the trail id set changes on every flush).
-  const trailItemIdsRef = useRef<readonly string[] | undefined>(trailItemIds);
-  trailItemIdsRef.current = trailItemIds;
-  const trailAnchorRef = useRef<typeof trailAnchor>(trailAnchor);
-  trailAnchorRef.current = trailAnchor;
-
-  // Resolve a trail id's top offset within the scroll container's content coordinate space.
-  // Prefers the mounted DOM row (cheap, exact); falls back to the virtualizer's cached
-  // measurement (plus the virtual container's own offset) for virtualized-away rows.
-  const resolveTrailOffset = useCallback(
-    (scrollContainer: HTMLElement, id: string): number | null => {
-      const cache = trailOffsetCacheRef.current;
-      const cached = cache.get(id);
-      if (cached !== undefined) {
-        return cached;
-      }
-      const mounted = document.getElementById(`stream-item-${id}`);
-      if (mounted instanceof HTMLElement && scrollContainer.contains(mounted)) {
-        const offset = getElementTopWithinScrollContainer(scrollContainer, mounted);
-        cache.set(id, offset);
-        return offset;
-      }
-      const virtualizedIndex = segments.historyVirtualized.findIndex((item) => item.id === id);
-      if (virtualizedIndex >= 0) {
-        const measurement = rowVirtualizer.measurementsCache[virtualizedIndex];
-        const virtualContainer = virtualRowsContainerRef.current;
-        if (measurement && virtualContainer) {
-          const containerTop = getElementTopWithinScrollContainer(
-            scrollContainer,
-            virtualContainer,
-          );
-          const offset = containerTop + measurement.start;
-          cache.set(id, offset);
-          return offset;
-        }
-      }
-      return null;
-    },
-    [rowVirtualizer, segments.historyVirtualized],
-  );
-
-  const runTrailAnchorProbe = useCallback(() => {
-    const anchor = trailAnchorRef.current;
-    const ids = trailItemIdsRef.current;
-    const scrollContainer = scrollContainerRef.current;
-    if (!anchor || !ids || ids.length === 0 || !scrollContainer) {
-      return;
-    }
-    anchor.publish(
-      computeTrailAnchor({
-        ids,
-        scrollTop: scrollContainer.scrollTop,
-        clientHeight: scrollContainer.clientHeight,
-        isAtBottom: isScrollContainerAtBottom(scrollContainer),
-        resolveOffset: (id) => resolveTrailOffset(scrollContainer, id),
-      }),
-    );
-  }, [resolveTrailOffset]);
-
-  const scheduleTrailAnchorProbe = useCallback(() => {
-    if (!trailAnchorRef.current || trailProbeFrameRef.current !== null) {
-      return;
-    }
-    trailProbeFrameRef.current = window.requestAnimationFrame(() => {
-      trailProbeFrameRef.current = null;
-      runTrailAnchorProbe();
-    });
-  }, [runTrailAnchorProbe]);
+  // Message-trail "current reading position" seam. All the anchor-probe machinery
+  // (offset resolution + caching, rAF scheduling, scroll-to-message, invalidation) lives
+  // in the hook; this component only wires the scroll listener, ResizeObserver, and the
+  // virtual-rows container ref into it.
+  const {
+    scheduleTrailAnchorProbe,
+    scrollToMessage,
+    handleVirtualRowsContainerRef,
+    onScrollAreaResized,
+  } = useTrailAnchorProbe({
+    scrollContainerRef,
+    rowVirtualizer,
+    historyVirtualized: segments.historyVirtualized,
+    historyMounted: segments.historyMounted,
+    liveHead: segments.liveHead,
+    virtualTotalSize,
+    trailItemIds,
+    trailAnchor,
+    cancelPendingStickToBottom,
+    setFollowOutput,
+    onNearBottomChange,
+  });
 
   const handleDomScroll = useCallback(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -503,29 +371,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     virtualTotalSize,
   ]);
 
-  // Cached trail offsets go stale when virtualized rows re-measure (shifting content
-  // offsets) or when the mounted/virtualized/live segments change. Drop the cache and
-  // re-probe so the anchor reflects the new geometry.
-  useEffect(() => {
-    trailOffsetCacheRef.current.clear();
-    scheduleTrailAnchorProbe();
-  }, [
-    scheduleTrailAnchorProbe,
-    segments.historyMounted,
-    segments.historyVirtualized,
-    segments.liveHead,
-    virtualTotalSize,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (trailProbeFrameRef.current !== null) {
-        window.cancelAnimationFrame(trailProbeFrameRef.current);
-        trailProbeFrameRef.current = null;
-      }
-    };
-  }, []);
-
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     const contentNode = contentRef.current;
@@ -537,8 +382,7 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     const observer = new ResizeObserver(() => {
       updateScrollMetrics();
       // Container/content resize moves row offsets; invalidate the trail cache and re-probe.
-      trailOffsetCacheRef.current.clear();
-      scheduleTrailAnchorProbe();
+      onScrollAreaResized();
       if (!followOutputRef.current) {
         return;
       }
@@ -551,7 +395,7 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     return () => {
       observer.disconnect();
     };
-  }, [scheduleStickToBottom, scheduleTrailAnchorProbe, updateScrollMetrics]);
+  }, [scheduleStickToBottom, onScrollAreaResized, updateScrollMetrics]);
 
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -616,53 +460,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       scrollContainer.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [cancelPendingStickToBottom, handleDomScroll]);
-
-  const scrollToMessage = useCallback(
-    (itemId: string) => {
-      const scrollContainer = scrollContainerRef.current;
-      if (!scrollContainer) {
-        return;
-      }
-      // Stop the follow-output machine from yanking scroll back to the bottom while
-      // (and after) we reposition to the requested row.
-      cancelPendingStickToBottom();
-      setFollowOutput(false);
-
-      const behavior: ScrollBehaviorLike = prefersReducedMotion() ? "auto" : "smooth";
-      const elementId = `stream-item-${itemId}`;
-
-      const mountedElement = document.getElementById(elementId);
-      if (mountedElement instanceof HTMLElement && scrollContainer.contains(mountedElement)) {
-        scrollContainerToElementTopOffset(scrollContainer, mountedElement, behavior);
-        syncNearBottom(scrollContainer, onNearBottomChange);
-        return;
-      }
-
-      // The row may live inside virtualized (unmounted) history. Scroll its index into
-      // view, then re-locate the now-mounted element after layout settles and fine-tune.
-      const virtualizedIndex = segments.historyVirtualized.findIndex((item) => item.id === itemId);
-      if (virtualizedIndex < 0) {
-        // Not addressable and not in virtualized history: id isn't in the stream. No-op.
-        return;
-      }
-
-      rowVirtualizer.scrollToIndex(virtualizedIndex, { align: "start" });
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          const container = scrollContainerRef.current;
-          if (!container) {
-            return;
-          }
-          const element = document.getElementById(elementId);
-          if (element instanceof HTMLElement && container.contains(element)) {
-            scrollContainerToElementTopOffset(container, element, behavior);
-          }
-          syncNearBottom(container, onNearBottomChange);
-        });
-      });
-    },
-    [cancelPendingStickToBottom, onNearBottomChange, rowVirtualizer, segments.historyVirtualized],
-  );
 
   useEffect(() => {
     const handle: StreamViewportHandle = {
