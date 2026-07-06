@@ -84,7 +84,6 @@ function resolveRailLeft(contentInsetLeft: number): number {
 
 // Opacity states, quietest to loudest.
 const OPACITY_REST = 0.2;
-const OPACITY_VISIBLE = 0.5;
 const OPACITY_CURRENT = 0.9;
 const OPACITY_FOCUS = 1;
 
@@ -160,15 +159,12 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// Base opacity a tick rests at for a given anchor snapshot, before pointer focus.
+// Base opacity a tick rests at for a given anchor snapshot, before pointer focus. Only the
+// single "current" (active-reading-position) tick is lit at rest — every other tick,
+// including ones merely scrolled into view, stays at the same quiet resting opacity so
+// there's exactly one lit tick when the pointer isn't hovering.
 function anchorOpacityFor(itemId: string, snapshot: TrailAnchorSnapshot): number {
-  if (snapshot.currentId === itemId) {
-    return OPACITY_CURRENT;
-  }
-  if (snapshot.visibleIds.includes(itemId)) {
-    return OPACITY_VISIBLE;
-  }
-  return OPACITY_REST;
+  return snapshot.currentId === itemId ? OPACITY_CURRENT : OPACITY_REST;
 }
 
 export function MessageTrailRail({
