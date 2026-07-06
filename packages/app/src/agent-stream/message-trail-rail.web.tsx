@@ -88,15 +88,30 @@ const OPACITY_VISIBLE = 0.5;
 const OPACITY_CURRENT = 0.9;
 const OPACITY_FOCUS = 1;
 
+// How much wider/taller the actual pointer hit-test region is than the visible tick column.
+// Thin ticks over a short column are hard to target — this keeps the visible geometry small
+// (still needed to fit a narrow gutter) while giving the pointer a much larger, invisible
+// area to land in. Purely an interaction affordance: nothing is painted in the extra space,
+// and it only ever extends into the gutter's own dead space, never past the content's real
+// left edge (right-side padding matches MIN_GAP_TO_CONTENT exactly).
+const HIT_PADDING_LEFT = 16;
+const HIT_PADDING_RIGHT = MIN_GAP_TO_CONTENT;
+
 // Static rail-region layout for the raw DOM host (left edge, vertically centered, ticks
 // grow rightward). Column height is dynamic and lives on the inner div's memoized style.
+//
+// This div is the actual pointer/click target, and is deliberately WIDER and TALLER than the
+// visible tick column it centers (via negative left/right insets and a fixed height rather
+// than a shrink-to-fit maxHeight) — see HIT_PADDING_LEFT/RIGHT above. Nearest-neighbour
+// magnification handles the resulting out-of-range pointerY/X gracefully (it just picks the
+// nearest edge tick), so no separate clamping is needed for the enlarged area to work.
 const RAIL_DIV_STYLE: CSSProperties = {
   position: "absolute",
-  left: 0,
+  left: -HIT_PADDING_LEFT,
+  right: -HIT_PADDING_RIGHT,
   top: "50%",
   transform: "translateY(-50%)",
-  width: RAIL_WIDTH,
-  maxHeight: `${RAIL_HEIGHT_FRACTION * 100}%`,
+  height: `${RAIL_HEIGHT_FRACTION * 100}%`,
   display: "flex",
   flexDirection: "column",
   alignItems: "center",

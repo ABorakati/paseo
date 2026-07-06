@@ -388,6 +388,13 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
         visibleIds.push(id);
       }
     }
+    // At the very bottom there's nothing left to scroll into, so the top-25%-line rule can
+    // never reach the final message if its own exchange is shorter than ~75% of the
+    // viewport (a short last reply) — the second-to-last message would otherwise stay
+    // "current" forever once you're at the end. Snap to the last message instead.
+    if (isScrollContainerAtBottom(scrollContainer)) {
+      currentId = ids[ids.length - 1] ?? currentId;
+    }
     anchor.publish({ currentId, visibleIds });
   }, [resolveTrailOffset]);
 
