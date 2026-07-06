@@ -5,7 +5,7 @@ describe("createTrailAnchorStore", () => {
   it("starts with an empty snapshot", () => {
     const store = createTrailAnchorStore();
 
-    expect(store.getSnapshot()).toEqual({ currentId: null, visibleIds: [] });
+    expect(store.getSnapshot()).toEqual({ currentId: null });
   });
 
   it("publishes a new snapshot and notifies listeners", () => {
@@ -13,35 +13,48 @@ describe("createTrailAnchorStore", () => {
     const listener = vi.fn();
     store.subscribe(listener);
 
-    store.publish({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    store.publish({ currentId: "u1" });
 
-    expect(store.getSnapshot()).toEqual({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    expect(store.getSnapshot()).toEqual({ currentId: "u1" });
     expect(listener).toHaveBeenCalledTimes(1);
-    expect(listener).toHaveBeenCalledWith({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    expect(listener).toHaveBeenCalledWith({ currentId: "u1" });
   });
 
   it("does not notify when publishing an identical snapshot", () => {
     const store = createTrailAnchorStore();
-    store.publish({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    store.publish({ currentId: "u1" });
 
     const listener = vi.fn();
     store.subscribe(listener);
 
-    store.publish({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    store.publish({ currentId: "u1" });
 
     expect(listener).not.toHaveBeenCalled();
   });
 
-  it("treats visibleIds with a different order as a different snapshot", () => {
+  it("treats a changed currentId as a new snapshot", () => {
     const store = createTrailAnchorStore();
-    store.publish({ currentId: "u1", visibleIds: ["u1", "u2"] });
+    store.publish({ currentId: "u1" });
 
     const listener = vi.fn();
     store.subscribe(listener);
 
-    store.publish({ currentId: "u1", visibleIds: ["u2", "u1"] });
+    store.publish({ currentId: "u2" });
+
+    expect(store.getSnapshot()).toEqual({ currentId: "u2" });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ currentId: "u2" });
+  });
+
+  it("treats a null→non-null currentId transition as a change", () => {
+    const store = createTrailAnchorStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.publish({ currentId: "u1" });
 
     expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ currentId: "u1" });
   });
 
   it("does not notify when publishing the initial empty snapshot again", () => {
@@ -49,9 +62,32 @@ describe("createTrailAnchorStore", () => {
     const listener = vi.fn();
     store.subscribe(listener);
 
-    store.publish({ currentId: null, visibleIds: [] });
+    store.publish({ currentId: null });
 
     expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("returns the latest snapshot from getSnapshot after several publishes", () => {
+    const store = createTrailAnchorStore();
+
+    store.publish({ currentId: "u1" });
+    store.publish({ currentId: "u2" });
+    store.publish({ currentId: "u3" });
+
+    expect(store.getSnapshot()).toEqual({ currentId: "u3" });
+  });
+
+  it("delivers the new snapshot value to a late subscriber's first notify", () => {
+    const store = createTrailAnchorStore();
+    store.publish({ currentId: "u1" });
+
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.publish({ currentId: "u2" });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ currentId: "u2" });
   });
 
   it("stops notifying after unsubscribe", () => {
@@ -60,7 +96,7 @@ describe("createTrailAnchorStore", () => {
     const unsubscribe = store.subscribe(listener);
 
     unsubscribe();
-    store.publish({ currentId: "u1", visibleIds: ["u1"] });
+    store.publish({ currentId: "u1" });
 
     expect(listener).not.toHaveBeenCalled();
   });
@@ -72,9 +108,9 @@ describe("createTrailAnchorStore", () => {
     store.subscribe(listenerA);
     const unsubscribeB = store.subscribe(listenerB);
 
-    store.publish({ currentId: "u1", visibleIds: ["u1"] });
+    store.publish({ currentId: "u1" });
     unsubscribeB();
-    store.publish({ currentId: "u2", visibleIds: ["u1", "u2"] });
+    store.publish({ currentId: "u2" });
 
     expect(listenerA).toHaveBeenCalledTimes(2);
     expect(listenerB).toHaveBeenCalledTimes(1);

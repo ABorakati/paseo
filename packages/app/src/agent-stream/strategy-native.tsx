@@ -151,6 +151,9 @@ function NativeStreamViewport(props: StreamRenderInput & { strategy: StreamStrat
     scrollToBottom,
   });
 
+  // Native has no message-trail rail/TOC UI yet (those render null on native); this
+  // implements the StreamViewportHandle contract for interface completeness and is
+  // currently unreachable from the UI.
   const scrollToMessage = useCallback(
     (itemId: string) => {
       // historyRows is newest-first (orderTailReverse) and the FlatList is inverted, so

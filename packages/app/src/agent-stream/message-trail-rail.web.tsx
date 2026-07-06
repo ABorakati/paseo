@@ -12,6 +12,22 @@ import { View, Text } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import type { MessageTrailItem } from "./message-trail-items";
 import type { TrailAnchorSnapshot, TrailAnchorStore } from "./message-trail-anchor";
+import {
+  anchorOpacityFor,
+  gaussianWeight,
+  MAGNIFY_ACTIVATION,
+  OPACITY_FOCUS,
+  OPACITY_REST,
+  RAIL_EDGE_MIN,
+  RAIL_WIDTH,
+  railFits,
+  resolveNearestTickIndex,
+  resolveRailLeft,
+  resolveTickSpacing,
+  TICK_HEIGHT,
+  TICK_MAX_WIDTH,
+  twoSigmaSqFor,
+} from "./message-trail-rail-geometry";
 import { inlineUnistylesStyle } from "@/styles/unistyles-inline-style";
 
 export interface MessageTrailRailProps {
@@ -43,49 +59,17 @@ export interface MessageTrailRailProps {
 // left edge of a chat message and the pane's actual height — so the rail adapts to whatever
 // padding/breakpoint/font-scale is really in effect on this device, and can fit into a much
 // smaller pane than a formula tied to the reading column's own fixed max-width ever could.
-const RAIL_WIDTH = 20;
-const TICK_HEIGHT = 2;
 const TICK_HEIGHT_HOVER = 4; // hovered tick reads thicker, not just longer
 const TICK_BASE_WIDTH = 6;
-const TICK_MAX_WIDTH = 20;
-// Tick spacing is dynamic: at the default when there's room, compressed toward the minimum
-// so hundreds of ticks still fit the available height (a minimap) rather than overflowing.
-// The magnification is the "accordion" that expands a compressed region on hover.
-const DEFAULT_TICK_SPACING = 10; // center-to-center when there's room
-const MIN_TICK_SPACING = 3; // floor when compressing many ticks to fit
 const REDUCED_MOTION_HOVER_WIDTH = 16;
 const RAIL_HEIGHT_FRACTION = 0.8; // tick column capped at 80% of rail height
-// Never let the rail region's left edge get closer than this to the pane edge.
-const RAIL_EDGE_MIN = 3;
-// Small bias toward the pane edge so the rail reads a touch left of the exact midpoint.
-const RAIL_NUDGE_LEFT = 6;
 // Minimum breathing room between the rail's right edge (where a fully-magnified, center-
 // anchored tick reaches — it can grow up to TICK_MAX_WIDTH === RAIL_WIDTH) and the content's
-// real left edge.
+// real left edge. Mirrors the geometry module's constant so HIT_PADDING_RIGHT matches it.
 const MIN_GAP_TO_CONTENT = 6;
-// The rail needs at least this much measured content inset to fit without overlapping.
-const MIN_CONTENT_INSET_FOR_RAIL = RAIL_WIDTH + MIN_GAP_TO_CONTENT + RAIL_EDGE_MIN;
 // Push the tooltip up so it reads centered on the focused tick rather than starting below it.
 const TOOLTIP_VERTICAL_NUDGE = 18;
 const TOOLTIP_BOTTOM_CLEARANCE = 64;
-// The rail needs enough vertical room for the tooltip to clear both above and below the
-// focused tick — below this it reads as cramped regardless of how many ticks fit.
-const MIN_PANE_HEIGHT_FOR_RAIL = TOOLTIP_BOTTOM_CLEARANCE * 2;
-
-// Center the (center-anchored) tick column on the midpoint of the measured content inset —
-// halfway between the pane's left edge and the real left edge of the chat content, biased a
-// touch toward the pane edge. Hard-clamped so the rail's right edge never crosses into the
-// content even if `contentInsetLeft` is smaller than expected.
-function resolveRailLeft(contentInsetLeft: number): number {
-  const desired = contentInsetLeft / 2 - RAIL_WIDTH / 2 - RAIL_NUDGE_LEFT;
-  const maxLeft = contentInsetLeft - RAIL_WIDTH - MIN_GAP_TO_CONTENT;
-  return Math.max(RAIL_EDGE_MIN, Math.min(desired, maxLeft));
-}
-
-// Opacity states, quietest to loudest.
-const OPACITY_REST = 0.2;
-const OPACITY_CURRENT = 0.9;
-const OPACITY_FOCUS = 1;
 
 // How much wider/taller the actual pointer hit-test region is than the visible tick column.
 // Thin ticks over a short column are hard to target — this keeps the visible geometry small
@@ -129,42 +113,11 @@ const RAIL_DIV_STYLE: CSSProperties = {
   cursor: "pointer",
 };
 
-// Gaussian magnification. Sigma is a tight fraction of the (dynamic) tick spacing so the
-// highlight focuses on the single hovered tick — a wider sigma lights up every neighbour,
-// which with only a handful of ticks reads as "all of them turned white". Scaling with the
-// spacing keeps the focus window ~half a tick wide even when the ticks are compressed.
-const SIGMA_FRACTION = 0.5;
-// Below this weight the tick is effectively unmagnified; skip the write.
-const MAGNIFY_ACTIVATION = 0.02;
-
-function twoSigmaSqFor(spacing: number): number {
-  const sigma = SIGMA_FRACTION * spacing;
-  return 2 * sigma * sigma;
-}
-
-// Compress the tick spacing so `count` ticks fit within `availableHeight` (a minimap),
-// down to a readable floor — falling back to the default when there's plenty of room.
-function resolveTickSpacing(count: number, availableHeight: number): number {
-  if (count <= 1 || availableHeight <= 0) {
-    return DEFAULT_TICK_SPACING;
-  }
-  const fitSpacing = (availableHeight - TICK_HEIGHT) / (count - 1);
-  return Math.min(DEFAULT_TICK_SPACING, Math.max(MIN_TICK_SPACING, fitSpacing));
-}
-
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return false;
   }
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-// Base opacity a tick rests at for a given anchor snapshot, before pointer focus. Only the
-// single "current" (active-reading-position) tick is lit at rest — every other tick,
-// including ones merely scrolled into view, stays at the same quiet resting opacity so
-// there's exactly one lit tick when the pointer isn't hovering.
-function anchorOpacityFor(itemId: string, snapshot: TrailAnchorSnapshot): number {
-  return snapshot.currentId === itemId ? OPACITY_CURRENT : OPACITY_REST;
 }
 
 export function MessageTrailRail({
@@ -271,7 +224,7 @@ export function MessageTrailRail({
         continue;
       }
 
-      const weight = Math.exp(-(distance * distance) / twoSigmaSq);
+      const weight = gaussianWeight(distance, twoSigmaSq);
       if (weight < MAGNIFY_ACTIVATION) {
         // Outside the tight focus window: rest geometry, anchor opacity.
         node.style.width = `${TICK_BASE_WIDTH}px`;
@@ -391,9 +344,7 @@ export function MessageTrailRail({
     measureRef.current();
   }, [items]);
 
-  const fits =
-    metrics.contentInsetLeft >= MIN_CONTENT_INSET_FOR_RAIL &&
-    metrics.paneHeight >= MIN_PANE_HEIGHT_FOR_RAIL;
+  const fits = railFits(metrics.contentInsetLeft, metrics.paneHeight);
   const lastReportedFitRef = useRef<boolean | null>(null);
   useEffect(() => {
     if (lastReportedFitRef.current === fits) {
@@ -524,17 +475,11 @@ export function MessageTrailRail({
       }
       const rect = column.getBoundingClientRect();
       const pointerY = event.clientY - rect.top;
-      const tickSpacing = spacingRef.current;
-      let nearestIndex = 0;
-      let nearestDistance = Number.POSITIVE_INFINITY;
-      for (let index = 0; index < itemsRef.current.length; index += 1) {
-        const center = index * tickSpacing + TICK_HEIGHT / 2;
-        const distance = Math.abs(pointerY - center);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestIndex = index;
-        }
-      }
+      const nearestIndex = resolveNearestTickIndex(
+        pointerY,
+        itemsRef.current.length,
+        spacingRef.current,
+      );
       activateIndex(nearestIndex);
     },
     [activateIndex],

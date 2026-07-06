@@ -1,6 +1,5 @@
 export interface TrailAnchorSnapshot {
   currentId: string | null;
-  visibleIds: readonly string[];
 }
 
 export interface TrailAnchorStore {
@@ -9,16 +8,10 @@ export interface TrailAnchorStore {
   subscribe(listener: (s: TrailAnchorSnapshot) => void): () => void;
 }
 
-const INITIAL_SNAPSHOT: TrailAnchorSnapshot = { currentId: null, visibleIds: [] };
+const INITIAL_SNAPSHOT: TrailAnchorSnapshot = { currentId: null };
 
 function isSameSnapshot(a: TrailAnchorSnapshot, b: TrailAnchorSnapshot): boolean {
-  if (a.currentId !== b.currentId) {
-    return false;
-  }
-  if (a.visibleIds.length !== b.visibleIds.length) {
-    return false;
-  }
-  return a.visibleIds.every((id, index) => id === b.visibleIds[index]);
+  return a.currentId === b.currentId;
 }
 
 export function createTrailAnchorStore(): TrailAnchorStore {

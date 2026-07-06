@@ -25,9 +25,7 @@ const USER_SCROLL_DELTA_EPSILON = 1;
 const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 64;
 const AUTO_SCROLL_RESUME_THRESHOLD_PX = 1;
 const HISTORY_START_THRESHOLD_PX = 96;
-// The "current reading position" line for the message-trail: the last user-message row
-// whose top edge sits at or above this fraction of the viewport from the top.
-const TRAIL_CURRENT_TOP_FRACTION = 0.25;
+import { computeTrailAnchor } from "./message-trail-probe";
 import { useWebElementScrollbar } from "@/components/use-web-scrollbar";
 
 const historyStartSlotStyle: CSSProperties = {
@@ -366,36 +364,15 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     if (!anchor || !ids || ids.length === 0 || !scrollContainer) {
       return;
     }
-    const scrollTop = scrollContainer.scrollTop;
-    const clientHeight = scrollContainer.clientHeight;
-    const currentLine = scrollTop + clientHeight * TRAIL_CURRENT_TOP_FRACTION;
-    const viewportTop = scrollTop;
-    const viewportBottom = scrollTop + clientHeight;
-
-    let currentId: string | null = null;
-    const visibleIds: string[] = [];
-    for (const id of ids) {
-      const top = resolveTrailOffset(scrollContainer, id);
-      if (top === null) {
-        continue;
-      }
-      // currentId: last (lowest-in-order) user row whose top is at/above the reading line.
-      if (top <= currentLine) {
-        currentId = id;
-      }
-      // visibleIds: user rows whose top intersects the viewport.
-      if (top >= viewportTop && top <= viewportBottom) {
-        visibleIds.push(id);
-      }
-    }
-    // At the very bottom there's nothing left to scroll into, so the top-25%-line rule can
-    // never reach the final message if its own exchange is shorter than ~75% of the
-    // viewport (a short last reply) — the second-to-last message would otherwise stay
-    // "current" forever once you're at the end. Snap to the last message instead.
-    if (isScrollContainerAtBottom(scrollContainer)) {
-      currentId = ids[ids.length - 1] ?? currentId;
-    }
-    anchor.publish({ currentId, visibleIds });
+    anchor.publish(
+      computeTrailAnchor({
+        ids,
+        scrollTop: scrollContainer.scrollTop,
+        clientHeight: scrollContainer.clientHeight,
+        isAtBottom: isScrollContainerAtBottom(scrollContainer),
+        resolveOffset: (id) => resolveTrailOffset(scrollContainer, id),
+      }),
+    );
   }, [resolveTrailOffset]);
 
   const scheduleTrailAnchorProbe = useCallback(() => {
