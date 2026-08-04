@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { DiffStat } from "@/components/diff-stat";
+import { SharedDiffView as PlatformSharedDiffView } from "@/git/shared-diff-view";
 import {
   View,
   Text,
@@ -1807,7 +1808,7 @@ function DiffBodyContent({
   return children;
 }
 
-interface SharedDiffViewProps {
+export interface SharedDiffViewProps {
   files: ParsedDiffFile[];
   displayPreferences: {
     layout: "unified" | "split";
@@ -2852,7 +2853,8 @@ export function GitDiffPane({
       checkingRepositoryLabel={t("workspace.git.diff.checkingRepository")}
       notRepositoryLabel={t("workspace.git.diff.notRepository")}
     >
-      <SharedDiffView
+      <PlatformSharedDiffView
+        fallback={SharedDiffView}
         files={files}
         displayPreferences={sharedDisplayPreferences}
         mode={workingTreeMode}

@@ -15,8 +15,9 @@ import {
   DiffModeMenu,
   DiffOptionsMenu,
   resolveDiffLayout,
-  SharedDiffView,
+  SharedDiffView as RNSharedDiffView,
 } from "@/git/diff-pane";
+import { SharedDiffView as PlatformSharedDiffView } from "@/git/shared-diff-view";
 import { DiffTooLargeState } from "@/git/diff-too-large-state";
 import { useCommitDiffFiles } from "@/git/use-diff-files";
 import { usePublishWorkingDiffAttachment, useWorkingDiff } from "@/git/use-working-diff";
@@ -97,7 +98,7 @@ function WorkingDiffBody({
   workingDiff: ReturnType<typeof useWorkingDiff>;
   hideWhitespace: boolean;
   displayPreferences: ReturnType<typeof useDiffPanelPreferences>["displayPreferences"];
-  mode: Extract<ComponentProps<typeof SharedDiffView>["mode"], { kind: "working_tab" }>;
+  mode: Extract<ComponentProps<typeof RNSharedDiffView>["mode"], { kind: "working_tab" }>;
 }) {
   const { t } = useTranslation();
   if (!cwd) {
@@ -143,7 +144,12 @@ function WorkingDiffBody({
     );
   }
   return (
-    <SharedDiffView files={workingDiff.files} displayPreferences={displayPreferences} mode={mode} />
+    <PlatformSharedDiffView
+      fallback={RNSharedDiffView}
+      files={workingDiff.files}
+      displayPreferences={displayPreferences}
+      mode={mode}
+    />
   );
 }
 
@@ -302,7 +308,8 @@ function CommitDiffPanel() {
     body = <PanelState message={t("panels.diff.empty")} testID="commit-diff-empty" />;
   } else {
     body = (
-      <SharedDiffView
+      <PlatformSharedDiffView
+        fallback={RNSharedDiffView}
         files={files}
         displayPreferences={panelPreferences.displayPreferences}
         mode={mode}

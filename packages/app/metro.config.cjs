@@ -35,6 +35,7 @@ config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   react: path.join(appNodeModulesRoot, "react"),
   "react-dom": path.join(appNodeModulesRoot, "react-dom"),
+  "@pierre/theme": path.join(appNodeModulesRoot, "@pierre/theme"),
   "react/jsx-runtime": path.join(appNodeModulesRoot, "react/jsx-runtime"),
   "react/jsx-dev-runtime": path.join(appNodeModulesRoot, "react/jsx-dev-runtime"),
 };
