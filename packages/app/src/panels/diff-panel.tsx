@@ -86,6 +86,7 @@ function PanelState({
 }
 
 function WorkingDiffBody({
+  serverId,
   cwd,
   isConnected,
   workingDiff,
@@ -93,6 +94,7 @@ function WorkingDiffBody({
   displayPreferences,
   mode,
 }: {
+  serverId: string;
   cwd: string | null | undefined;
   isConnected: boolean;
   workingDiff: ReturnType<typeof useWorkingDiff>;
@@ -101,6 +103,7 @@ function WorkingDiffBody({
   mode: Extract<ComponentProps<typeof RNSharedDiffView>["mode"], { kind: "working_tab" }>;
 }) {
   const { t } = useTranslation();
+  const editContext = useMemo(() => (cwd ? { serverId, cwd } : undefined), [cwd, serverId]);
   if (!cwd) {
     return <PanelState message={t("panels.diff.directoryMissing")} />;
   }
@@ -146,6 +149,7 @@ function WorkingDiffBody({
   return (
     <PlatformSharedDiffView
       fallback={RNSharedDiffView}
+      editContext={editContext}
       files={workingDiff.files}
       displayPreferences={displayPreferences}
       mode={mode}
@@ -262,6 +266,7 @@ function WorkingDiffPanel() {
       </View>
       <View style={styles.body}>
         <WorkingDiffBody
+          serverId={serverId}
           cwd={cwd}
           isConnected={isConnected}
           workingDiff={workingDiff}

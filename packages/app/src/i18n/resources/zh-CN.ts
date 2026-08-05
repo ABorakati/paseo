@@ -804,6 +804,10 @@ export const zhCN: TranslationResources = {
         base: "base",
         newFile: "新增",
         deletedFile: "已删除",
+        editFile: "编辑文件",
+        saved: "文件已保存",
+        saveError: "无法保存文件",
+        saveConflict: "文件已在磁盘上更改 — 请刷新后重试",
         commits: {
           title: "提交",
           countLabel: "{{count}} 个工作区提交",

@@ -1,16 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, Pressable } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
+import { Pencil } from "lucide-react-native";
 import {
   CodeView,
+  EditProvider,
   type CodeViewDiffItem,
   type CodeViewHandle,
   type CodeViewItem,
   type CodeViewReactOptions,
+  type CreateEditor,
   type DiffLineAnnotation,
+  type FileContents,
   type LineAnnotation,
 } from "@pierre/diffs/react";
+import { Editor } from "@pierre/diffs/edit";
 import type { SharedDiffViewProps } from "@/git/diff-pane";
 import { DiffStat } from "@/components/diff-stat";
 import { buildPierreDiffOptions } from "@/git/pierre-diff-options";
@@ -22,8 +27,13 @@ import {
 } from "@/git/pierre-diff-review";
 import { PierreFileTree } from "@/git/pierre-file-tree.web";
 import { InlineReviewThread } from "@/review/surface";
+import { useToast } from "@/contexts/toast-context";
+import { useHostRuntimeClient } from "@/runtime/host-runtime";
+import type { Theme } from "@/styles/theme";
 
 type PierreAnnotation = DiffLineAnnotation<PierreReviewAnnotation>;
+const ThemedPencil = withUnistyles(Pencil);
+const pencilColorMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
 
 interface PressableState {
   pressed: boolean;
@@ -31,6 +41,10 @@ interface PressableState {
 const collapseButtonPressableStyle = ({ pressed }: PressableState) => [
   styles.collapseButton,
   pressed && styles.collapseButtonPressed,
+];
+const editButtonPressableStyle = ({ pressed }: PressableState) => [
+  styles.editButton,
+  pressed && styles.editButtonPressed,
 ];
 
 interface CollapseToggleProps {
@@ -53,6 +67,32 @@ function CollapseToggle({ collapsed, itemId, onToggle }: CollapseToggleProps): R
   );
 }
 
+interface EditToggleProps {
+  itemId: string;
+  label: string;
+  onToggle: (itemId: string) => void;
+}
+
+function EditToggle({ itemId, label, onToggle }: EditToggleProps): React.JSX.Element {
+  const handlePress = useCallback(() => onToggle(itemId), [itemId, onToggle]);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={handlePress}
+      testID={`diff-file-edit-${itemId}`}
+      style={editButtonPressableStyle}
+    >
+      <ThemedPencil size={14} uniProps={pencilColorMapping} />
+    </Pressable>
+  );
+}
+
+// The diffs-container host sizes itself from this style; without an explicit
+// flex fill it collapses to 0 height inside the flex column and the
+// virtualizer renders nothing.
+const CODE_VIEW_HOST_STYLE = { flex: 1, minHeight: 0 } as const;
+
 interface PierreCodeViewProps {
   items: readonly CodeViewDiffItem<PierreReviewAnnotation>[];
   wrapLines: boolean;
@@ -67,6 +107,10 @@ interface PierreCodeViewProps {
     range: { start: number; side?: "deletions" | "additions"; end: number },
     context: { item: CodeViewItem<PierreReviewAnnotation> },
   ) => void;
+  onItemEditComplete?: (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => void;
+  loadDiffFiles?: (
+    fileDiff: import("@pierre/diffs").FileDiffMetadata,
+  ) => Promise<import("@pierre/diffs").FileDiffLoadedFiles | null>;
   gutterUtilityEnabled: boolean;
   viewerRef: React.Ref<CodeViewHandle<PierreReviewAnnotation>>;
   // Injected by the withUnistyles wrapper below — docs/unistyles.md bans useUnistyles.
@@ -82,6 +126,8 @@ function PierreCodeView({
   renderHeaderPrefix,
   renderAnnotation,
   onGutterUtilityClick,
+  onItemEditComplete,
+  loadDiffFiles,
   gutterUtilityEnabled,
   viewerRef,
 }: PierreCodeViewProps): React.JSX.Element {
@@ -91,8 +137,9 @@ function PierreCodeView({
       ...base,
       enableGutterUtility: gutterUtilityEnabled,
       onGutterUtilityClick,
+      loadDiffFiles,
     } as CodeViewReactOptions<PierreReviewAnnotation>;
-  }, [gutterUtilityEnabled, layout, onGutterUtilityClick, themeType, wrapLines]);
+  }, [gutterUtilityEnabled, layout, loadDiffFiles, onGutterUtilityClick, themeType, wrapLines]);
 
   return (
     <CodeView<PierreReviewAnnotation>
@@ -102,6 +149,8 @@ function PierreCodeView({
       renderHeaderMetadata={renderHeaderMetadata}
       renderHeaderPrefix={renderHeaderPrefix}
       renderAnnotation={renderAnnotation}
+      onItemEditComplete={onItemEditComplete}
+      style={CODE_VIEW_HOST_STYLE}
     />
   );
 }
@@ -122,20 +171,40 @@ export function SharedDiffView({
   files,
   displayPreferences,
   mode,
+  editContext,
 }: PlatformSharedDiffViewProps): React.JSX.Element {
   const { t } = useTranslation();
+  const toast = useToast();
 
   const reviewActions = mode.kind === "commit" ? undefined : mode.reviewActions;
   const isTreeMode = mode.kind === "working_tree" && mode.viewMode === "tree";
+  const client = useHostRuntimeClient(editContext?.serverId ?? "");
 
-  // Latest-props ref so stable callbacks read current review state.
+  // Latest-props refs so stable callbacks read current state.
+  const filesRef = useRef(files);
+  filesRef.current = files;
   const reviewActionsRef = useRef(reviewActions);
   reviewActionsRef.current = reviewActions;
+  const editContextRef = useRef(editContext);
+  editContextRef.current = editContext;
+  const clientRef = useRef(client);
+  clientRef.current = client;
 
   const viewerRef = useRef<CodeViewHandle<PierreReviewAnnotation>>(null);
   const consumedFocusRequestRef = useRef<string | null>(null);
 
   const filesByPath = useMemo(() => new Map(files.map((f) => [f.path, f])), [files]);
+
+  const [editPaths, setEditPaths] = useState<ReadonlySet<string>>(() => new Set());
+  const editPathsRef = useRef(editPaths);
+  editPathsRef.current = editPaths;
+  // CodeView reconciles items only when their `version` changes
+  // (syncItemRecord early-returns on equal versions), so every rebuild that
+  // can alter item content must carry a fresh version.
+  const [renderVersion, setRenderVersion] = useState(0);
+  useEffect(() => {
+    setRenderVersion((version) => version + 1);
+  }, [editPaths, files, mode, reviewActions]);
 
   const segments = useMemo<readonly PierreSegment[]>(() => {
     const result: PierreSegment[] = [];
@@ -165,13 +234,15 @@ export function SharedDiffView({
         type: "diff" as const,
         fileDiff: parsedDiffFileToFileDiffMetadata(file),
         collapsed: !isExpanded,
+        edit: editPaths.has(file.path),
+        version: renderVersion,
         annotations: buildPierreReviewAnnotations(file, reviewActions),
       });
     }
 
     flush();
     return result;
-  }, [files, mode, reviewActions]);
+  }, [editPaths, files, mode, renderVersion, reviewActions]);
 
   // Collapse state lives in the panel store (expandedPaths), so the toggle
   // only writes the store; the rebuilt items flow back through the props.
@@ -266,6 +337,162 @@ export function SharedDiffView({
     [files],
   );
 
+  // Hydrates full file contents for the editor. Only added files can be
+  // hydrated today: the daemon's `fs.file.read` returns the working-tree
+  // (new) side, and there is no `git show <rev>:<path>` RPC to fetch the
+  // old side for modified files yet. Modified/deleted diffs return null so
+  // pierre keeps them partial and read-only.
+  const loadDiffFiles = useCallback(
+    async (
+      fileDiff: import("@pierre/diffs").FileDiffMetadata,
+    ): Promise<import("@pierre/diffs").FileDiffLoadedFiles | null> => {
+      const ctx = editContextRef.current;
+      const c = clientRef.current;
+      const file = filesRef.current.find((f) => f.path === fileDiff.name);
+      if (!ctx || !c || !file?.isNew) {
+        return null;
+      }
+      const read = await c.readFile(ctx.cwd, file.path).catch(() => null);
+      if (!read || read.kind !== "text") {
+        return null;
+      }
+      return {
+        oldFile: { name: file.path, contents: "" },
+        newFile: {
+          name: file.path,
+          contents: new TextDecoder().decode(read.bytes),
+        },
+      };
+    },
+    [],
+  );
+
+  const handleToggleEdit = useCallback((itemId: string) => {
+    if (editContextRef.current == null) {
+      return;
+    }
+    // Clearing the CodeView selection before the items rebuild prevents
+    // pierre's InteractionManager from re-rendering a selection against the
+    // post-edit re-rendered rows (gutter/content child mismatch crash).
+    viewerRef.current?.clearSelectedLines();
+    const wasEditing = editPathsRef.current.has(itemId);
+    setEditPaths((current) => {
+      const next = new Set(current);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+    if (!wasEditing) {
+      // pierre's attach-time editor sync is deferred behind an async
+      // highlighter load; a subsequent items rebuild can recycle the
+      // container before that promise resolves and the editable surface
+      // never renders. Poll: re-sync until the surface is actually mounted.
+      let attempts = 0;
+      const syncUntilMounted = () => {
+        attempts += 1;
+        if (attempts > 12) {
+          return;
+        }
+        const viewer = viewerRef.current?.getInstance() as
+          | {
+              items?: Array<{
+                item?: { id?: string };
+                instance?: { syncRenderViewToEditor(): void; fileContainer?: HTMLElement | null };
+              }>;
+            }
+          | undefined;
+        const record = viewer?.items?.find((entry) => entry.item?.id === itemId);
+        const instance = record?.instance;
+        const surfaceMounted =
+          instance?.fileContainer?.shadowRoot?.querySelector(
+            "[contenteditable], [data-editor-overlay]",
+          ) != null;
+        if (surfaceMounted) {
+          return;
+        }
+        instance?.syncRenderViewToEditor();
+        setTimeout(syncUntilMounted, 800);
+      };
+      setTimeout(syncUntilMounted, 400);
+    }
+  }, []);
+
+  const renderEditToggle = useCallback(
+    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => {
+      if (item.type !== "diff" || editContextRef.current == null) {
+        return null;
+      }
+      // Only added files are editable until the daemon can serve the old
+      // side for modified files.
+      const file = filesByPath.get(item.id);
+      if (!file?.isNew) {
+        return null;
+      }
+      return (
+        <EditToggle
+          itemId={item.id}
+          label={t("workspace.git.diff.editFile")}
+          onToggle={handleToggleEdit}
+        />
+      );
+    },
+    [filesByPath, handleToggleEdit, t],
+  );
+
+  const handleItemEditComplete = useCallback(
+    (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => {
+      const ctx = editContextRef.current;
+      const c = clientRef.current;
+      if (!ctx || !c) {
+        return;
+      }
+      // Turn the item back to read-only immediately; the refreshed working
+      // diff replaces the item content once the daemon applies the write.
+      setEditPaths((current) => {
+        if (!current.has(item.id)) {
+          return current;
+        }
+        const next = new Set(current);
+        next.delete(item.id);
+        return next;
+      });
+      void (async () => {
+        // Fetch the current version so the daemon's optimistic-concurrency
+        // check catches edits that landed while the file was being edited.
+        const read = await c.readFile(ctx.cwd, item.id).catch(() => null);
+        const result = await c
+          .writeFile({
+            cwd: ctx.cwd,
+            path: item.id,
+            content: file.contents,
+            expectedModifiedAt: read?.modifiedAt ?? "",
+            expectedRevision: read?.revision,
+          })
+          .catch(() => ({ status: "error" as const, error: "write failed" }));
+        if (result.status === "conflict" && result.version?.status === "missing") {
+          // The diff paths are repo-relative; a subdir-rooted workspace cannot
+          // resolve them for writes (pre-existing app-wide limitation).
+          toast.show(t("workspace.git.diff.saveError"));
+        } else if (result.status === "conflict") {
+          toast.show(t("workspace.git.diff.saveConflict"));
+        } else if (result.status === "error") {
+          toast.show(t("workspace.git.diff.saveError"));
+        } else {
+          toast.show(t("workspace.git.diff.saved"));
+        }
+      })();
+    },
+    [t, toast],
+  );
+
+  const createEditor = useMemo<CreateEditor<PierreReviewAnnotation>>(
+    () => (options) => new Editor(options),
+    [],
+  );
+
   // Scroll to the focused file when a working_tab focus request arrives.
   useEffect(() => {
     if (mode.kind !== "working_tab" || mode.focusPath == null) {
@@ -282,6 +509,16 @@ export function SharedDiffView({
     return () => cancelAnimationFrame(frame);
   }, [mode]);
 
+  const renderItemHeaderMetadata = useCallback(
+    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => (
+      <View style={styles.headerMetaRow}>
+        {renderHeaderMetadata(item)}
+        {renderEditToggle(item)}
+      </View>
+    ),
+    [renderEditToggle, renderHeaderMetadata],
+  );
+
   // Tree view mode is the pierre FileTree; everything else is CodeView.
   if (isTreeMode) {
     return (
@@ -295,39 +532,43 @@ export function SharedDiffView({
   }
 
   return (
-    <View style={styles.container}>
-      {segments.map((segment) => {
-        if (segment.type === "status") {
-          const { file } = segment;
+    <EditProvider createEditor={createEditor}>
+      <View style={styles.container}>
+        {segments.map((segment) => {
+          if (segment.type === "status") {
+            const { file } = segment;
+            return (
+              <View key={segment.key} style={styles.statusMessageContainer}>
+                <Text style={styles.statusMessagePath}>{file.path}</Text>
+                <Text style={styles.statusMessageText}>
+                  {file.status === "binary"
+                    ? t("workspace.git.diff.binaryFile")
+                    : t("workspace.git.diff.tooLarge")}
+                </Text>
+              </View>
+            );
+          }
+
           return (
-            <View key={segment.key} style={styles.statusMessageContainer}>
-              <Text style={styles.statusMessagePath}>{file.path}</Text>
-              <Text style={styles.statusMessageText}>
-                {file.status === "binary"
-                  ? t("workspace.git.diff.binaryFile")
-                  : t("workspace.git.diff.tooLarge")}
-              </Text>
+            <View key={segment.key} style={styles.codeViewContainer}>
+              <ThemedPierreCodeView
+                viewerRef={viewerRef}
+                items={segment.items}
+                wrapLines={displayPreferences.wrapLines}
+                layout={displayPreferences.layout}
+                renderHeaderMetadata={renderItemHeaderMetadata}
+                renderHeaderPrefix={renderHeaderPrefix}
+                renderAnnotation={renderAnnotation}
+                onGutterUtilityClick={handleGutterUtilityClick}
+                onItemEditComplete={handleItemEditComplete}
+                loadDiffFiles={loadDiffFiles}
+                gutterUtilityEnabled={reviewActions != null}
+              />
             </View>
           );
-        }
-
-        return (
-          <View key={segment.key} style={styles.codeViewContainer}>
-            <ThemedPierreCodeView
-              viewerRef={viewerRef}
-              items={segment.items}
-              wrapLines={displayPreferences.wrapLines}
-              layout={displayPreferences.layout}
-              renderHeaderMetadata={renderHeaderMetadata}
-              renderHeaderPrefix={renderHeaderPrefix}
-              renderAnnotation={renderAnnotation}
-              onGutterUtilityClick={handleGutterUtilityClick}
-              gutterUtilityEnabled={reviewActions != null}
-            />
-          </View>
-        );
-      })}
-    </View>
+        })}
+      </View>
+    </EditProvider>
   );
 }
 
@@ -355,6 +596,11 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.foregroundMuted,
     fontStyle: "italic",
   },
+  headerMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing[2],
+  },
   collapseButton: {
     paddingHorizontal: theme.spacing[2],
     paddingVertical: theme.spacing[1],
@@ -369,5 +615,12 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.foregroundMuted,
     fontSize: theme.fontSize.sm,
     lineHeight: theme.fontSize.sm,
+  },
+  editButton: {
+    padding: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+  },
+  editButtonPressed: {
+    backgroundColor: theme.colors.surface2,
   },
 }));

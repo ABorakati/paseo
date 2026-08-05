@@ -1816,6 +1816,11 @@ export interface SharedDiffViewProps {
     codeFontSize: number;
     monoFontFamily: string;
   };
+  /** Required on web/desktop to enable in-place file editing. */
+  editContext?: {
+    serverId: string;
+    cwd: string;
+  };
   mode:
     | {
         kind: "working_tree";
@@ -2626,6 +2631,7 @@ export function GitDiffPane({
   const canUseSplitLayout = isWeb && !isMobile;
   const { preferences: changesPreferences, updatePreferences: updateChangesPreferences } =
     useChangesPreferences();
+  const editContext = useMemo(() => ({ serverId, cwd }), [cwd, serverId]);
   const wrapLines = changesPreferences.wrapLines;
   const viewMode = changesPreferences.viewMode;
   const effectiveLayout = resolveDiffLayout(changesPreferences.layout, canUseSplitLayout);
@@ -2855,6 +2861,7 @@ export function GitDiffPane({
     >
       <PlatformSharedDiffView
         fallback={SharedDiffView}
+        editContext={editContext}
         files={files}
         displayPreferences={sharedDisplayPreferences}
         mode={workingTreeMode}

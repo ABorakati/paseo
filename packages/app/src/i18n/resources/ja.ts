@@ -823,6 +823,10 @@ export const ja: TranslationResources = {
         base: "ベース",
         newFile: "新規",
         deletedFile: "削除済み",
+        editFile: "ファイルを編集",
+        saved: "ファイルを保存しました",
+        saveError: "ファイルを保存できませんでした",
+        saveConflict: "ディスク上のファイルが変更されました — 更新して再試行してください",
         commits: {
           title: "コミット",
           countLabel: "ワークスペースのコミット数: {{count}}",

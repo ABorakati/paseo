@@ -812,6 +812,10 @@ export const ar: TranslationResources = {
         base: "قاعدة",
         newFile: "جديد",
         deletedFile: "تم الحذف",
+        editFile: "تحرير الملف",
+        saved: "تم حفظ الملف",
+        saveError: "تعذّر حفظ الملف",
+        saveConflict: "تغيّر الملف على القرص — حدّث وحاول مجددًا",
         commits: {
           title: "الإيداعات",
           countLabel: "{{count}} من إيداعات مساحة العمل",

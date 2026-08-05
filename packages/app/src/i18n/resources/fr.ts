@@ -842,6 +842,10 @@ export const fr: TranslationResources = {
         base: "base",
         newFile: "Nouveau",
         deletedFile: "Supprimé",
+        editFile: "Modifier le fichier",
+        saved: "Fichier enregistré",
+        saveError: "Impossible d'enregistrer le fichier",
+        saveConflict: "Le fichier a changé sur le disque — actualisez et réessayez",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",
