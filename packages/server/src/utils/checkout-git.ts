@@ -881,7 +881,7 @@ async function requireGitRepo(cwd: string): Promise<void> {
   }
 }
 
-async function requireGitWorktreeRoot(cwd: string): Promise<string> {
+export async function requireGitWorktreeRoot(cwd: string): Promise<string> {
   try {
     const { stdout } = await runGitCommand(["rev-parse", "--show-toplevel"], {
       cwd,

@@ -19,12 +19,14 @@ import { FileUploadStore } from "../../file-upload/index.js";
 import type { DownloadTokenStore } from "../../file-download/token-store.js";
 import {
   getDownloadableFileInfo,
+  getExplorerFileVersion,
   listDirectoryEntries,
   readExplorerFile,
   streamExplorerFile,
   writeExplorerFile,
 } from "../../file-explorer/service.js";
 import { workspaceFileObserver, type FileObserver } from "../../file-explorer/observer.js";
+import { requireGitWorktreeRoot } from "../../../utils/checkout-git.js";
 import { getProjectIcon } from "../../../utils/project-icon.js";
 
 /**
@@ -125,6 +127,47 @@ export class WorkspaceFilesSession {
       expectedModifiedAt: request.expectedModifiedAt,
       expectedRevision: request.expectedRevision,
     });
+
+    // Git diff paths are repo-relative, but the file write resolves them
+    // against the request cwd. On a subdir-rooted workspace the target is
+    // "missing" there even though the file exists at the worktree root; retry
+    // against the git root so diff-save writes land.
+    if (result.status === "conflict" && result.version?.status === "missing") {
+      try {
+        const worktreeRoot = await requireGitWorktreeRoot(request.cwd);
+        if (worktreeRoot !== request.cwd) {
+          // The path was "missing" at the request cwd only because diff paths
+          // are repo-relative; at the worktree root the file exists. Fetch its
+          // real version so the optimistic-concurrency check passes instead of
+          // conflicting against the caller's failed-read values.
+          const version = await getExplorerFileVersion({
+            root: worktreeRoot,
+            relativePath: request.path,
+          });
+          const expected =
+            version.status === "ready"
+              ? { expectedModifiedAt: version.modifiedAt, expectedRevision: version.revision }
+              : {
+                  expectedModifiedAt: request.expectedModifiedAt,
+                  expectedRevision: request.expectedRevision,
+                };
+          const retried = await writeExplorerFile({
+            root: worktreeRoot,
+            relativePath: request.path,
+            content: request.content,
+            ...expected,
+          });
+          this.host.emit({
+            type: "fs.file.write.response",
+            payload: { result: retried, requestId: request.requestId },
+          });
+          return;
+        }
+      } catch {
+        // Not a git checkout (or git unavailable) - keep the original result.
+      }
+    }
+
     this.host.emit({
       type: "fs.file.write.response",
       payload: { result, requestId: request.requestId },

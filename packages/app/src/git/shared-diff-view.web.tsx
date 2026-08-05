@@ -130,7 +130,16 @@ function EditToggle({ itemId, label, onToggle }: EditToggleProps): React.JSX.Ele
 // The diffs-container host sizes itself from this style; without an explicit
 // flex fill it collapses to 0 height inside the flex column and the
 // virtualizer renders nothing.
-const CODE_VIEW_HOST_STYLE = { flex: 1, minHeight: 0 } as const;
+const CODE_VIEW_HOST_STYLE = {
+  flex: 1,
+  minHeight: 0,
+  // The CodeView root is the scroll container; without overflow-y it stays
+  // overflow:visible and the diff content overflows the pane instead of
+  // scrolling (the diffshub sets these via Tailwind className).
+  overflowY: "auto" as const,
+  overflowX: "clip" as const,
+  overscrollBehaviorY: "contain" as const,
+} as const;
 
 interface PierreCodeViewProps {
   items: readonly CodeViewDiffItem<PierreReviewAnnotation>[];
@@ -250,7 +259,7 @@ export function SharedDiffView({
     const themeName =
       UnistylesRuntime.themeName === "light" ? "github-light-default" : "github-dark-default";
     const langs = [...new Set(files.map((file) => languageForPath(file.path)))];
-    void preloadHighlighter({ themes: [themeName], langs }).catch(() => {});
+    void preloadHighlighter({ themes: [themeName], langs }).catch(() => { });
   }, [files]);
   // CodeView reconciles items only when their `version` changes
   // (syncItemRecord early-returns on equal versions), so every rebuild that
@@ -452,11 +461,11 @@ export function SharedDiffView({
         }
         const viewer = viewerRef.current?.getInstance() as
           | {
-              items?: Array<{
-                item?: { id?: string };
-                instance?: { syncRenderViewToEditor(): void; fileContainer?: HTMLElement | null };
-              }>;
-            }
+            items?: Array<{
+              item?: { id?: string };
+              instance?: { syncRenderViewToEditor(): void; fileContainer?: HTMLElement | null };
+            }>;
+          }
           | undefined;
         const record = viewer?.items?.find((entry) => entry.item?.id === itemId);
         const instance = record?.instance;
@@ -527,8 +536,9 @@ export function SharedDiffView({
           })
           .catch(() => ({ status: "error" as const, error: "write failed" }));
         if (result.status === "conflict" && result.version?.status === "missing") {
-          // The diff paths are repo-relative; a subdir-rooted workspace cannot
-          // resolve them for writes (pre-existing app-wide limitation).
+          // The diff paths are repo-relative; the daemon retries writes at the
+          // git worktree root when the target is missing at the request cwd, so
+          // this only fires when the file does not exist anywhere in the repo.
           toast.show(t("workspace.git.diff.saveError"));
         } else if (result.status === "conflict") {
           toast.show(t("workspace.git.diff.saveConflict"));
