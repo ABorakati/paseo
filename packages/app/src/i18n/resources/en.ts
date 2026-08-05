@@ -833,6 +833,7 @@ export const en = {
         copied: "Copied to clipboard",
         copySelectionFailed: "Couldn't copy",
         addedToChat: "Added to chat",
+        commentOnSelection: "Comment",
         commits: {
           title: "Commits",
           countLabel: "{{count}} workspace commits",

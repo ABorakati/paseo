@@ -834,6 +834,7 @@ export const ja: TranslationResources = {
         copied: "クリップボードにコピーしました",
         copySelectionFailed: "コピーできませんでした",
         addedToChat: "チャットに追加しました",
+        commentOnSelection: "コメント",
         commits: {
           title: "コミット",
           countLabel: "ワークスペースのコミット数: {{count}}",

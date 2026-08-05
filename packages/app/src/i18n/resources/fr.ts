@@ -853,6 +853,7 @@ export const fr: TranslationResources = {
         copied: "Copié dans le presse-papiers",
         copySelectionFailed: "Échec de la copie",
         addedToChat: "Ajouté au chat",
+        commentOnSelection: "Commenter",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",

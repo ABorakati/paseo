@@ -854,6 +854,7 @@ export const es: TranslationResources = {
         copied: "Copiado al portapapeles",
         copySelectionFailed: "No se pudo copiar",
         addedToChat: "Añadido al chat",
+        commentOnSelection: "Comentar",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits del espacio de trabajo",

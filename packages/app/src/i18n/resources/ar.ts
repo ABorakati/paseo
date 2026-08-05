@@ -823,6 +823,7 @@ export const ar: TranslationResources = {
         copied: "تم النسخ إلى الحافظة",
         copySelectionFailed: "تعذّر النسخ",
         addedToChat: "تمت الإضافة إلى المحادثة",
+        commentOnSelection: "تعليق",
         commits: {
           title: "الإيداعات",
           countLabel: "{{count}} من إيداعات مساحة العمل",

@@ -199,10 +199,6 @@ interface PierreCodeViewProps {
     annotation: LineAnnotation<PierreReviewAnnotation> | PierreAnnotation,
     item: CodeViewItem<PierreReviewAnnotation>,
   ) => React.ReactNode;
-  onGutterUtilityClick?: (
-    range: { start: number; side?: "deletions" | "additions"; end: number },
-    context: { item: CodeViewItem<PierreReviewAnnotation> },
-  ) => void;
   onItemEditComplete?: (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => void;
   onItemEditChange?: (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
@@ -210,7 +206,6 @@ interface PierreCodeViewProps {
   loadDiffFiles?: (
     fileDiff: import("@pierre/diffs").FileDiffMetadata,
   ) => Promise<import("@pierre/diffs").FileDiffLoadedFiles | null>;
-  gutterUtilityEnabled: boolean;
   viewerRef: React.Ref<CodeViewHandle<PierreReviewAnnotation>>;
   // Injected by the withUnistyles wrapper below — docs/unistyles.md bans useUnistyles.
   themeType: "light" | "dark";
@@ -225,13 +220,11 @@ function PierreCodeView({
   renderHeaderMetadata,
   renderHeaderPrefix,
   renderAnnotation,
-  onGutterUtilityClick,
   onItemEditChange,
   onItemEditComplete,
   onKeyDown,
   onDoubleClick,
   loadDiffFiles,
-  gutterUtilityEnabled,
   viewerRef,
   theme,
 }: PierreCodeViewProps): React.JSX.Element {
@@ -239,8 +232,6 @@ function PierreCodeView({
     const base = buildPierreDiffOptions({ themeType, wrapLines, layout });
     return {
       ...base,
-      enableGutterUtility: gutterUtilityEnabled,
-      onGutterUtilityClick,
       loadDiffFiles,
       // Pins the file header while scrolling and restyles the whole diff
       // surface from the paseo theme (pierre's stickyHeaders option breaks
@@ -248,15 +239,7 @@ function PierreCodeView({
       // with the app themes).
       unsafeCSS: buildPierreDiffUnsafeCss(theme),
     } as CodeViewReactOptions<PierreReviewAnnotation>;
-  }, [
-    gutterUtilityEnabled,
-    layout,
-    loadDiffFiles,
-    onGutterUtilityClick,
-    theme,
-    themeType,
-    wrapLines,
-  ]);
+  }, [layout, loadDiffFiles, theme, themeType, wrapLines]);
 
   // The CodeView root is the scroll container; double-click to start editing
   // and ctrl/cmd+s to save both need to be caught at this level so they work
@@ -306,6 +289,10 @@ interface SelectionActionState {
   text: string;
   left: number;
   top: number;
+  /** The file + diff position the selection sits on, for the Comment action. */
+  itemId: string;
+  lineNumber: number;
+  side: "additions" | "deletions";
 }
 
 // Keep the text selection alive while clicking the popover buttons (a
@@ -318,18 +305,51 @@ const clearTextSelection = () => {
   window.getSelection()?.removeAllRanges();
 };
 
+/** The diff position the selection anchor sits on (line + side), or null. */
+function resolveSelectionDiffPosition(selection: Selection): {
+  lineNumber: number;
+  side: "additions" | "deletions";
+} | null {
+  const anchorNode = selection.anchorNode;
+  if (!(anchorNode instanceof Node) || anchorNode.parentElement == null) {
+    return null;
+  }
+  const row = anchorNode.parentElement.closest("[data-line-index]");
+  const lineType = row?.getAttribute("data-line-type") ?? "";
+  // The content row carries data-line-type + data-line-index but not the
+  // line number; the matching gutter cell (same data-line-index) holds it.
+  const lineIndex = row?.getAttribute("data-line-index");
+  const root = anchorNode.getRootNode();
+  const gutter =
+    lineIndex != null && root instanceof ShadowRoot
+      ? root.querySelector(`[data-column-number][data-line-index="${CSS.escape(lineIndex)}"]`)
+      : null;
+  const lineNumber = Number.parseInt(gutter?.getAttribute("data-column-number") ?? "", 10);
+  if (Number.isNaN(lineNumber)) {
+    return null;
+  }
+  return {
+    lineNumber,
+    side: lineType.includes("deletion") || lineType === "del" ? "deletions" : "additions",
+  };
+}
+
 interface SelectionActionPopoverProps {
   action: SelectionActionState;
   canAddToChat: boolean;
+  canComment: boolean;
   onCopy: () => void;
   onAddToChat: () => void;
+  onComment: () => void;
 }
 
 function SelectionActionPopover({
   action,
   canAddToChat,
+  canComment,
   onCopy,
   onAddToChat,
+  onComment,
 }: SelectionActionPopoverProps): React.JSX.Element {
   const { t } = useTranslation();
   // The app mounts only named gorhom portal hosts; an unnamed <Portal>
@@ -342,6 +362,19 @@ function SelectionActionPopover({
         testID="diff-selection-actions"
         onPointerDown={blockPointerDefault}
       >
+        {canComment ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("workspace.git.diff.commentOnSelection")}
+            onPress={onComment}
+            testID="diff-selection-comment"
+            style={selectionPrimaryPressableStyle}
+          >
+            <Text style={styles.selectionPrimaryText}>
+              {t("workspace.git.diff.commentOnSelection")}
+            </Text>
+          </Pressable>
+        ) : null}
         {canAddToChat ? (
           <Pressable
             accessibilityRole="button"
@@ -435,18 +468,24 @@ export function SharedDiffView({
         return;
       }
       const viewer = viewerRef.current?.getInstance() as
-        | { items?: Array<{ element?: HTMLElement | null }> }
+        | { items?: Array<{ element?: HTMLElement | null; item?: { id?: string } }> }
         | undefined;
       if (!viewer?.items?.some((entry) => entry.element === container)) {
         setSelectionAction(null);
         return;
       }
+      const record = viewer.items.find((entry) => entry.element === container);
+      const itemId = record?.item?.id ?? "";
+      const position = resolveSelectionDiffPosition(selection);
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       setSelectionAction({
         text: selection.toString(),
         left: rect.left,
         top: rect.bottom + 6,
+        itemId,
+        lineNumber: position?.lineNumber ?? 0,
+        side: position?.side ?? "additions",
       });
     };
     document.addEventListener("selectionchange", handleSelectionChange);
@@ -581,29 +620,6 @@ export function SharedDiffView({
       );
     },
     [],
-  );
-
-  const handleGutterUtilityClick = useCallback(
-    (
-      range: { start: number; side?: "deletions" | "additions"; end: number },
-      context: { item: CodeViewItem<PierreReviewAnnotation> },
-    ) => {
-      if (context.item.type !== "diff") {
-        return;
-      }
-      const file = files.find((f) => f.path === context.item.id);
-      if (!file) {
-        return;
-      }
-      const target = findPierreReviewTarget(file, {
-        side: range.side ?? "additions",
-        lineNumber: range.start,
-      });
-      if (target) {
-        reviewActionsRef.current?.onStartComment(target);
-      }
-    },
-    [files],
   );
 
   // Hydrates full file contents for the editor. Only added files can be
@@ -825,6 +841,26 @@ export function SharedDiffView({
     toast.show(t("workspace.git.diff.addedToChat"));
   }, [mode, selectionAction, t, toast]);
 
+  const handleCommentOnSelection = useCallback(() => {
+    if (selectionAction == null || reviewActionsRef.current == null) {
+      return;
+    }
+    const file = filesRef.current.find((f) => f.path === selectionAction.itemId);
+    const target =
+      file != null
+        ? findPierreReviewTarget(file, {
+            side: selectionAction.side,
+            lineNumber: selectionAction.lineNumber,
+          })
+        : null;
+    if (target == null) {
+      return;
+    }
+    reviewActionsRef.current.onStartComment(target);
+    setSelectionAction(null);
+    clearTextSelection();
+  }, [selectionAction]);
+
   // Ctrl/Cmd+S saves every editing file with unsaved changes; the browser's
   // default "save page" is suppressed.
   const handleKeyDown = useCallback(
@@ -974,6 +1010,7 @@ export function SharedDiffView({
   }
 
   const canAddSelectionToChat = mode.kind !== "commit" && mode.onAddSnippetToChat != null;
+  const canCommentOnSelection = reviewActions != null;
 
   return (
     <EditProvider createEditor={createEditor}>
@@ -1003,13 +1040,11 @@ export function SharedDiffView({
                 renderHeaderMetadata={renderItemHeaderMetadata}
                 renderHeaderPrefix={renderHeaderPrefix}
                 renderAnnotation={renderAnnotation}
-                onGutterUtilityClick={handleGutterUtilityClick}
                 onItemEditChange={handleItemEditChange}
                 onItemEditComplete={handleItemEditComplete}
                 onKeyDown={handleKeyDown}
                 onDoubleClick={handleDoubleClick}
                 loadDiffFiles={loadDiffFiles}
-                gutterUtilityEnabled={reviewActions != null}
               />
             </View>
           );
@@ -1019,8 +1054,10 @@ export function SharedDiffView({
         <SelectionActionPopover
           action={selectionAction}
           canAddToChat={canAddSelectionToChat}
+          canComment={canCommentOnSelection}
           onCopy={handleCopySelection}
           onAddToChat={handleAddSelectionToChat}
+          onComment={handleCommentOnSelection}
         />
       ) : null}
     </EditProvider>

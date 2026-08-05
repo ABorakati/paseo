@@ -845,6 +845,7 @@ export const ptBR: TranslationResources = {
         copied: "Copiado para a área de transferência",
         copySelectionFailed: "Não foi possível copiar",
         addedToChat: "Adicionado ao chat",
+        commentOnSelection: "Comentar",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits do espaço de trabalho",

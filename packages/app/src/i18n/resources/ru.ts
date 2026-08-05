@@ -845,6 +845,7 @@ export const ru: TranslationResources = {
         copied: "Скопировано в буфер обмена",
         copySelectionFailed: "Не удалось скопировать",
         addedToChat: "Добавлено в чат",
+        commentOnSelection: "Комментировать",
         commits: {
           title: "Коммиты",
           countLabel: "{{count}} коммитов рабочего пространства",

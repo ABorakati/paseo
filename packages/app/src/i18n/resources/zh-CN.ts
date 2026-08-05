@@ -815,6 +815,7 @@ export const zhCN: TranslationResources = {
         copied: "已复制到剪贴板",
         copySelectionFailed: "复制失败",
         addedToChat: "已添加到对话",
+        commentOnSelection: "评论",
         commits: {
           title: "提交",
           countLabel: "{{count}} 个工作区提交",
