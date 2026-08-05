@@ -2387,6 +2387,25 @@ function parseForgeHost(url: string | null | undefined): string | null {
   return url ? (parseGitRemoteLocation(url)?.host ?? null) : null;
 }
 
+// The pierre web renderer owns the full changes pane (and its own commit UI,
+// like the diffshub); the native CommitsSection is not part of the web layout
+// and would overlap the virtualized diff content. Kept as a separate component
+// so the gate does not count toward GitDiffPane's cyclomatic complexity.
+function CommitsSectionSlot({
+  serverId,
+  cwd,
+  onCommitPress,
+}: {
+  serverId: string;
+  cwd: string;
+  onCommitPress: (sha: string) => void;
+}): ReactElement | null {
+  if (isWeb) {
+    return null;
+  }
+  return <CommitsSection serverId={serverId} cwd={cwd} onCommitPress={onCommitPress} />;
+}
+
 function buildForgeSetupMessage(input: {
   action: ForgeSetupAction;
   forge: Forge;
@@ -2951,7 +2970,10 @@ export function GitDiffPane({
 
       <View style={styles.diffContainer}>{bodyContent}</View>
 
-      <CommitsSection serverId={serverId} cwd={cwd} onCommitPress={handleCommitPress} />
+      {/* The pierre web renderer owns the full changes pane (and its own
+          commit UI, like the diffshub); the native CommitsSection is not part
+          of the web layout and would overlap the virtualized diff content. */}
+      <CommitsSectionSlot serverId={serverId} cwd={cwd} onCommitPress={handleCommitPress} />
     </View>
   );
 }
@@ -3084,6 +3106,9 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     minHeight: 0,
     position: "relative",
+    // Clip the virtualized diff content so it cannot overflow into elements
+    // below (the web pierre view lays out much taller than its viewport).
+    overflow: "hidden",
   },
   scrollView: {
     flex: 1,

@@ -16,6 +16,8 @@ import {
   type LineAnnotation,
 } from "@pierre/diffs/react";
 import { Editor } from "@pierre/diffs/edit";
+import { preloadHighlighter } from "@pierre/diffs";
+import { UnistylesRuntime } from "react-native-unistyles";
 import type { SharedDiffViewProps } from "@/git/diff-pane";
 import { DiffStat } from "@/components/diff-stat";
 import { buildPierreDiffOptions } from "@/git/pierre-diff-options";
@@ -34,6 +36,43 @@ import type { Theme } from "@/styles/theme";
 type PierreAnnotation = DiffLineAnnotation<PierreReviewAnnotation>;
 const ThemedPencil = withUnistyles(Pencil);
 const pencilColorMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
+
+// Extension → shiki language for pre-warming the editor's main-thread
+// highlighter (the diff render uses the worker pool; the editor loads its own
+// shared highlighter on first edit, which is slow unless pre-warmed).
+const LANGUAGE_BY_EXTENSION: Record<string, string> = {
+  c: "c",
+  cpp: "cpp",
+  css: "css",
+  go: "go",
+  h: "c",
+  hpp: "cpp",
+  html: "html",
+  java: "java",
+  js: "javascript",
+  jsx: "javascript",
+  json: "json",
+  md: "markdown",
+  mdx: "markdown",
+  php: "php",
+  py: "python",
+  rb: "ruby",
+  rs: "rust",
+  sh: "shell",
+  sql: "sql",
+  toml: "toml",
+  ts: "typescript",
+  tsx: "typescript",
+  txt: "text",
+  xml: "xml",
+  yaml: "yaml",
+  yml: "yaml",
+};
+
+function languageForPath(path: string): string {
+  const extension = path.split(".").pop()?.toLowerCase() ?? "";
+  return LANGUAGE_BY_EXTENSION[extension] ?? "text";
+}
 
 interface PressableState {
   pressed: boolean;
@@ -198,6 +237,21 @@ export function SharedDiffView({
   const [editPaths, setEditPaths] = useState<ReadonlySet<string>>(() => new Set());
   const editPathsRef = useRef(editPaths);
   editPathsRef.current = editPaths;
+
+  // Pre-warm the editor's main-thread shared highlighter so the first edit
+  // session mounts quickly (the diff render highlights on the worker pool;
+  // the editor's own highlighter loads lazily and can take seconds).
+  // preloadHighlighter merges additively, so re-running with new languages is
+  // cheap after the first load.
+  useEffect(() => {
+    if (files.length === 0) {
+      return;
+    }
+    const themeName =
+      UnistylesRuntime.themeName === "light" ? "github-light-default" : "github-dark-default";
+    const langs = [...new Set(files.map((file) => languageForPath(file.path)))];
+    void preloadHighlighter({ themes: [themeName], langs }).catch(() => {});
+  }, [files]);
   // CodeView reconciles items only when their `version` changes
   // (syncItemRecord early-returns on equal versions), so every rebuild that
   // can alter item content must carry a fresh version.
