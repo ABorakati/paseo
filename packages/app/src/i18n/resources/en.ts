@@ -828,6 +828,11 @@ export const en = {
         saveConflict: "File changed on disk — refresh and retry",
         saveFile: "Save file",
         unsavedChanges: "Unsaved changes",
+        copySelection: "Copy",
+        addSelectionToChat: "Add to chat",
+        copied: "Copied to clipboard",
+        copySelectionFailed: "Couldn't copy",
+        addedToChat: "Added to chat",
         commits: {
           title: "Commits",
           countLabel: "{{count}} workspace commits",

@@ -848,6 +848,11 @@ export const fr: TranslationResources = {
         saveConflict: "Le fichier a changé sur le disque — actualisez et réessayez",
         saveFile: "Enregistrer le fichier",
         unsavedChanges: "Modifications non enregistrées",
+        copySelection: "Copier",
+        addSelectionToChat: "Ajouter au chat",
+        copied: "Copié dans le presse-papiers",
+        copySelectionFailed: "Échec de la copie",
+        addedToChat: "Ajouté au chat",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",

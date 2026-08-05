@@ -32,6 +32,8 @@ import { PierreFileTree } from "@/git/pierre-file-tree.web";
 import { InlineReviewThread } from "@/review/surface";
 import { useToast } from "@/contexts/toast-context";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
+import { Portal } from "@gorhom/portal";
+import { useFloatingPanelPortalHostName } from "@/components/ui/floating-panel-portal";
 import type { Theme } from "@/styles/theme";
 
 type PierreAnnotation = DiffLineAnnotation<PierreReviewAnnotation>;
@@ -95,6 +97,14 @@ const editButtonPressableStyle = ({ pressed }: PressableState) => [
 const saveButtonPressableStyle = ({ pressed }: PressableState) => [
   styles.saveButton,
   pressed && styles.saveButtonPressed,
+];
+const selectionPrimaryPressableStyle = ({ pressed }: PressableState) => [
+  styles.selectionPrimaryButton,
+  pressed && styles.selectionButtonPressed,
+];
+const selectionSecondaryPressableStyle = ({ pressed }: PressableState) => [
+  styles.selectionSecondaryButton,
+  pressed && styles.selectionButtonPressed,
 ];
 
 interface CollapseToggleProps {
@@ -292,6 +302,73 @@ const ThemedPierreCodeView = withUnistyles(PierreCodeView, (theme, rt) => ({
   theme,
 }));
 
+interface SelectionActionState {
+  text: string;
+  left: number;
+  top: number;
+}
+
+// Keep the text selection alive while clicking the popover buttons (a
+// mousedown outside the selection would collapse it and unmount the popover).
+const blockPointerDefault = (event: { preventDefault?: () => void }) => {
+  event.preventDefault?.();
+};
+
+const clearTextSelection = () => {
+  window.getSelection()?.removeAllRanges();
+};
+
+interface SelectionActionPopoverProps {
+  action: SelectionActionState;
+  canAddToChat: boolean;
+  onCopy: () => void;
+  onAddToChat: () => void;
+}
+
+function SelectionActionPopover({
+  action,
+  canAddToChat,
+  onCopy,
+  onAddToChat,
+}: SelectionActionPopoverProps): React.JSX.Element {
+  const { t } = useTranslation();
+  // The app mounts only named gorhom portal hosts; an unnamed <Portal>
+  // would render into a default host that does not exist.
+  const portalHostName = useFloatingPanelPortalHostName();
+  return (
+    <Portal hostName={portalHostName}>
+      <View
+        style={[styles.selectionPopover, { left: action.left, top: action.top }]}
+        testID="diff-selection-actions"
+        onPointerDown={blockPointerDefault}
+      >
+        {canAddToChat ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("workspace.git.diff.addSelectionToChat")}
+            onPress={onAddToChat}
+            testID="diff-selection-add-to-chat"
+            style={selectionPrimaryPressableStyle}
+          >
+            <Text style={styles.selectionPrimaryText}>
+              {t("workspace.git.diff.addSelectionToChat")}
+            </Text>
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("workspace.git.diff.copySelection")}
+          onPress={onCopy}
+          testID="diff-selection-copy"
+          style={selectionSecondaryPressableStyle}
+        >
+          <Text style={styles.selectionSecondaryText}>{t("workspace.git.diff.copySelection")}</Text>
+        </Pressable>
+      </View>
+    </Portal>
+  );
+}
+
 type PlatformSharedDiffViewProps = SharedDiffViewProps & {
   fallback: React.ComponentType<SharedDiffViewProps>;
 };
@@ -338,6 +415,43 @@ export function SharedDiffView({
   const dirtyPathsRef = useRef(dirtyPaths);
   dirtyPathsRef.current = dirtyPaths;
   const latestContentsRef = useRef(new Map<string, FileContents>());
+
+  // Text-segment selection in the diff (pierre lets you select any run of
+  // characters, not just whole lines) surfaces a floating Copy / Add-to-chat
+  // action, mirroring the pierre selection-action popover.
+  const [selectionAction, setSelectionAction] = useState<SelectionActionState | null>(null);
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection == null || selection.isCollapsed || selection.toString().trim().length === 0) {
+        setSelectionAction(null);
+        return;
+      }
+      // Only selections anchored inside this view's diffs-containers count.
+      const root = selection.anchorNode?.getRootNode();
+      const container = root instanceof ShadowRoot ? root.host : null;
+      if (!(container instanceof HTMLElement) || container.tagName !== "DIFFS-CONTAINER") {
+        setSelectionAction(null);
+        return;
+      }
+      const viewer = viewerRef.current?.getInstance() as
+        | { items?: Array<{ element?: HTMLElement | null }> }
+        | undefined;
+      if (!viewer?.items?.some((entry) => entry.element === container)) {
+        setSelectionAction(null);
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setSelectionAction({
+        text: selection.toString(),
+        left: rect.left,
+        top: rect.bottom + 6,
+      });
+    };
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => document.removeEventListener("selectionchange", handleSelectionChange);
+  }, []);
 
   // Pre-warm the editor's main-thread shared highlighter so the first edit
   // session mounts quickly (the diff render highlights on the worker pool;
@@ -679,6 +793,38 @@ export function SharedDiffView({
     [writeFileContents],
   );
 
+  const handleCopySelection = useCallback(() => {
+    if (selectionAction == null) {
+      return;
+    }
+    void navigator.clipboard
+      .writeText(selectionAction.text)
+      .then(() => {
+        toast.show(t("workspace.git.diff.copied"));
+        setSelectionAction(null);
+        clearTextSelection();
+        return true;
+      })
+      .catch(() => {
+        toast.show(t("workspace.git.diff.copySelectionFailed"));
+        return false;
+      });
+  }, [selectionAction, t, toast]);
+
+  const handleAddSelectionToChat = useCallback(() => {
+    if (selectionAction == null) {
+      return;
+    }
+    const addSnippet = mode.kind === "commit" ? undefined : mode.onAddSnippetToChat;
+    if (addSnippet == null) {
+      return;
+    }
+    addSnippet(selectionAction.text);
+    setSelectionAction(null);
+    clearTextSelection();
+    toast.show(t("workspace.git.diff.addedToChat"));
+  }, [mode, selectionAction, t, toast]);
+
   // Ctrl/Cmd+S saves every editing file with unsaved changes; the browser's
   // default "save page" is suppressed.
   const handleKeyDown = useCallback(
@@ -827,6 +973,8 @@ export function SharedDiffView({
     );
   }
 
+  const canAddSelectionToChat = mode.kind !== "commit" && mode.onAddSnippetToChat != null;
+
   return (
     <EditProvider createEditor={createEditor}>
       <View style={styles.container}>
@@ -867,6 +1015,14 @@ export function SharedDiffView({
           );
         })}
       </View>
+      {selectionAction != null ? (
+        <SelectionActionPopover
+          action={selectionAction}
+          canAddToChat={canAddSelectionToChat}
+          onCopy={handleCopySelection}
+          onAddToChat={handleAddSelectionToChat}
+        />
+      ) : null}
     </EditProvider>
   );
 }
@@ -934,5 +1090,46 @@ const styles = StyleSheet.create((theme) => ({
     height: 6,
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.colors.statusWarning,
+  },
+  selectionPopover: {
+    position: "absolute",
+    zIndex: 1000,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing[1],
+    padding: theme.spacing[1],
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.surface2,
+    borderWidth: theme.borderWidth[1],
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.foreground,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  selectionPrimaryButton: {
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.accent,
+  },
+  selectionPrimaryText: {
+    color: theme.colors.accentForeground,
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.medium,
+  },
+  selectionSecondaryButton: {
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.surface3,
+  },
+  selectionSecondaryText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.xs,
+  },
+  selectionButtonPressed: {
+    opacity: 0.8,
   },
 }));

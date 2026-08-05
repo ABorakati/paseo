@@ -818,6 +818,11 @@ export const ar: TranslationResources = {
         saveConflict: "تغيّر الملف على القرص — حدّث وحاول مجددًا",
         saveFile: "حفظ الملف",
         unsavedChanges: "تغييرات غير محفوظة",
+        copySelection: "نسخ",
+        addSelectionToChat: "إضافة إلى المحادثة",
+        copied: "تم النسخ إلى الحافظة",
+        copySelectionFailed: "تعذّر النسخ",
+        addedToChat: "تمت الإضافة إلى المحادثة",
         commits: {
           title: "الإيداعات",
           countLabel: "{{count}} من إيداعات مساحة العمل",

@@ -1301,6 +1301,8 @@ interface GitDiffPaneProps {
   enabled?: boolean;
   onOpenFile?: (path: string) => void;
   onAddToChat?: (path: string) => void;
+  /** Append a selected code snippet to the focused chat's composer. */
+  onAddSnippetToChat?: (snippet: string) => void;
 }
 
 type PressableStyleFn = (
@@ -1832,6 +1834,7 @@ export interface SharedDiffViewProps {
         workspaceFileDragScope?: { serverId: string; workspaceId: string };
         onOpenFile?: (path: string) => void;
         onAddToChat?: (path: string) => void;
+        onAddSnippetToChat?: (snippet: string) => void;
         onCopyPath?: (path: string) => void;
         onDownload?: (path: string) => void;
         onExpandedPathsChange: (paths: string[]) => void;
@@ -1843,6 +1846,7 @@ export interface SharedDiffViewProps {
         reviewActions: InlineReviewActions;
         focusPath?: string;
         focusRequestId?: number;
+        onAddSnippetToChat?: (snippet: string) => void;
         onExpandedPathsChange: (paths: string[]) => void;
       }
     | {
@@ -2643,6 +2647,7 @@ export function GitDiffPane({
   enabled,
   onOpenFile,
   onAddToChat,
+  onAddSnippetToChat,
 }: GitDiffPaneProps) {
   const { settings: appSettings } = useAppSettings();
   const { t } = useTranslation();
@@ -2816,6 +2821,7 @@ export function GitDiffPane({
       workspaceFileDragScope: workspaceId ? { serverId, workspaceId } : undefined,
       onOpenFile,
       onAddToChat,
+      onAddSnippetToChat,
       onCopyPath: handleCopyPath,
       onDownload: handleDownloadPath,
       onExpandedPathsChange: changesTree.updateExpandedPaths,
@@ -2831,6 +2837,7 @@ export function GitDiffPane({
       workspaceId,
       onOpenFile,
       onAddToChat,
+      onAddSnippetToChat,
       handleCopyPath,
       handleDownloadPath,
       changesTree.updateExpandedPaths,

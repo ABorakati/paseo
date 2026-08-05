@@ -39,6 +39,7 @@ import { resolveDesktopExplorerWidth } from "@/components/desktop-sidebar-layout
 import { useWorkspaceLayoutStore } from "@/stores/workspace-layout-store";
 import { buildWorkspaceTabPersistenceKey } from "@/workspace-tabs/model";
 import { resolveFocusedChatTarget } from "@/composer/focused-chat-target";
+import { useAddSnippetToChat } from "@/composer/add-snippet-to-chat";
 import { createWorkspaceFileAttachment } from "@/attachments/workspace-file";
 import { useDraftStore } from "@/stores/draft-store";
 
@@ -468,6 +469,7 @@ function ChangedFilesPane({
   "serverId" | "workspaceId" | "workspaceRoot" | "isOpen" | "onOpenFile"
 >) {
   const { addFile, canAddToChat } = useAddFileToChat({ serverId, workspaceId });
+  const { addSnippetToChat } = useAddSnippetToChat({ serverId, workspaceId });
   return (
     <GitDiffPane
       serverId={serverId}
@@ -476,6 +478,7 @@ function ChangedFilesPane({
       enabled={isOpen}
       onOpenFile={onOpenFile}
       onAddToChat={canAddToChat ? addFile : undefined}
+      onAddSnippetToChat={canAddToChat ? addSnippetToChat : undefined}
     />
   );
 }

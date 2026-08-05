@@ -840,6 +840,11 @@ export const ptBR: TranslationResources = {
         saveConflict: "O arquivo mudou no disco — atualize e tente novamente",
         saveFile: "Salvar arquivo",
         unsavedChanges: "Alterações não salvas",
+        copySelection: "Copiar",
+        addSelectionToChat: "Adicionar ao chat",
+        copied: "Copiado para a área de transferência",
+        copySelectionFailed: "Não foi possível copiar",
+        addedToChat: "Adicionado ao chat",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits do espaço de trabalho",

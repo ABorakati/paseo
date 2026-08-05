@@ -810,6 +810,11 @@ export const zhCN: TranslationResources = {
         saveConflict: "文件已在磁盘上更改 — 请刷新后重试",
         saveFile: "保存文件",
         unsavedChanges: "未保存的更改",
+        copySelection: "复制",
+        addSelectionToChat: "添加到对话",
+        copied: "已复制到剪贴板",
+        copySelectionFailed: "复制失败",
+        addedToChat: "已添加到对话",
         commits: {
           title: "提交",
           countLabel: "{{count}} 个工作区提交",

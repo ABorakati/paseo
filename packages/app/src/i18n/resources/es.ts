@@ -849,6 +849,11 @@ export const es: TranslationResources = {
         saveConflict: "El archivo cambió en disco — actualiza e inténtalo de nuevo",
         saveFile: "Guardar archivo",
         unsavedChanges: "Cambios sin guardar",
+        copySelection: "Copiar",
+        addSelectionToChat: "Añadir al chat",
+        copied: "Copiado al portapapeles",
+        copySelectionFailed: "No se pudo copiar",
+        addedToChat: "Añadido al chat",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits del espacio de trabajo",

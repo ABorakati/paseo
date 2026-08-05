@@ -840,6 +840,11 @@ export const ru: TranslationResources = {
         saveConflict: "Файл изменился на диске — обновите и повторите",
         saveFile: "Сохранить файл",
         unsavedChanges: "Несохранённые изменения",
+        copySelection: "Копировать",
+        addSelectionToChat: "Добавить в чат",
+        copied: "Скопировано в буфер обмена",
+        copySelectionFailed: "Не удалось скопировать",
+        addedToChat: "Добавлено в чат",
         commits: {
           title: "Коммиты",
           countLabel: "{{count}} коммитов рабочего пространства",

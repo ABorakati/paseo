@@ -18,6 +18,7 @@ import {
   SharedDiffView as RNSharedDiffView,
 } from "@/git/diff-pane";
 import { SharedDiffView as PlatformSharedDiffView } from "@/git/shared-diff-view";
+import { useAddSnippetToChat } from "@/composer/add-snippet-to-chat";
 import { DiffTooLargeState } from "@/git/diff-too-large-state";
 import { useCommitDiffFiles } from "@/git/use-diff-files";
 import { usePublishWorkingDiffAttachment, useWorkingDiff } from "@/git/use-working-diff";
@@ -211,6 +212,7 @@ function WorkingDiffPanel() {
   const toggleExpandAll = useCallback(() => {
     setExpandedPaths(allFilesExpanded ? [] : null);
   }, [allFilesExpanded]);
+  const { addSnippetToChat, canAddToChat } = useAddSnippetToChat({ serverId, workspaceId });
   const mode = useMemo(
     () => ({
       kind: "working_tab" as const,
@@ -218,9 +220,17 @@ function WorkingDiffPanel() {
       reviewActions: workingDiff.reviewActions,
       focusPath: target.focusPath,
       focusRequestId: target.focusRequestId,
+      onAddSnippetToChat: canAddToChat ? addSnippetToChat : undefined,
       onExpandedPathsChange: setExpandedPaths,
     }),
-    [expandedPaths, target.focusPath, target.focusRequestId, workingDiff.reviewActions],
+    [
+      addSnippetToChat,
+      canAddToChat,
+      expandedPaths,
+      target.focusPath,
+      target.focusRequestId,
+      workingDiff.reviewActions,
+    ],
   );
 
   const baseRefLabel = workingDiff.baseRef?.replace(/^refs\/(heads|remotes)\//, "") ?? "";

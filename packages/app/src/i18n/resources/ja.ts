@@ -829,6 +829,11 @@ export const ja: TranslationResources = {
         saveConflict: "ディスク上のファイルが変更されました — 更新して再試行してください",
         saveFile: "ファイルを保存",
         unsavedChanges: "未保存の変更",
+        copySelection: "コピー",
+        addSelectionToChat: "チャットに追加",
+        copied: "クリップボードにコピーしました",
+        copySelectionFailed: "コピーできませんでした",
+        addedToChat: "チャットに追加しました",
         commits: {
           title: "コミット",
           countLabel: "ワークスペースのコミット数: {{count}}",
