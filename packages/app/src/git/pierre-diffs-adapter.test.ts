@@ -239,4 +239,60 @@ describe("parsedDiffFileToFileDiffMetadata", () => {
     expect(hunk.hunkContext).toBeUndefined();
     expect(hunk.hunkSpecs).toBeUndefined();
   });
+
+  it("marks new/deleted diffs complete (isPartial false) and change diffs partial", () => {
+    const change = parsedDiffFileToFileDiffMetadata(
+      createFile({
+        hunks: [
+          {
+            oldStart: 1,
+            oldCount: 1,
+            newStart: 1,
+            newCount: 1,
+            lines: [line("remove", "old"), line("add", "new")],
+          },
+        ],
+      }),
+    );
+    expect(change.type).toBe("change");
+    expect(change.isPartial).toBe(true);
+
+    const added = parsedDiffFileToFileDiffMetadata(
+      createFile({
+        isNew: true,
+        hunks: [
+          {
+            oldStart: 0,
+            oldCount: 0,
+            newStart: 1,
+            newCount: 2,
+            lines: [line("add", "one"), line("add", "two")],
+          },
+        ],
+      }),
+    );
+    expect(added.type).toBe("new");
+    expect(added.isPartial).toBe(false);
+    expect(added.additionLines).toEqual(["one\n", "two\n"]);
+    expect(added.deletionLines).toEqual([]);
+
+    const deleted = parsedDiffFileToFileDiffMetadata(
+      createFile({
+        isDeleted: true,
+        hunks: [
+          {
+            oldStart: 1,
+            oldCount: 2,
+            newStart: 0,
+            newCount: 0,
+            lines: [line("remove", "old1"), line("remove", "old2")],
+          },
+        ],
+      }),
+    );
+    expect(deleted.type).toBe("deleted");
+    expect(deleted.isPartial).toBe(false);
+    expect(deleted.deletionLines).toEqual(["old1\n", "old2\n"]);
+    expect(deleted.additionLines).toEqual([]);
+  });
 });

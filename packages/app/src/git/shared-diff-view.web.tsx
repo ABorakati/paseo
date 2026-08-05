@@ -1,23 +1,74 @@
-import { useCallback, useMemo, type ComponentType, type ReactElement, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
 import {
   CodeView,
   type CodeViewDiffItem,
+  type CodeViewHandle,
   type CodeViewItem,
   type CodeViewReactOptions,
+  type DiffLineAnnotation,
+  type LineAnnotation,
 } from "@pierre/diffs/react";
 import type { SharedDiffViewProps } from "@/git/diff-pane";
 import { DiffStat } from "@/components/diff-stat";
 import { buildPierreDiffOptions } from "@/git/pierre-diff-options";
 import { parsedDiffFileToFileDiffMetadata } from "@/git/pierre-diffs-adapter";
+import {
+  buildPierreReviewAnnotations,
+  findPierreReviewTarget,
+  type PierreReviewAnnotation,
+} from "@/git/pierre-diff-review";
+import { PierreFileTree } from "@/git/pierre-file-tree.web";
+import { InlineReviewThread } from "@/review/surface";
+
+type PierreAnnotation = DiffLineAnnotation<PierreReviewAnnotation>;
+
+interface PressableState {
+  pressed: boolean;
+}
+const collapseButtonPressableStyle = ({ pressed }: PressableState) => [
+  styles.collapseButton,
+  pressed && styles.collapseButtonPressed,
+];
+
+interface CollapseToggleProps {
+  collapsed: boolean;
+  itemId: string;
+  onToggle: (itemId: string) => void;
+}
+
+function CollapseToggle({ collapsed, itemId, onToggle }: CollapseToggleProps): React.JSX.Element {
+  const handlePress = useCallback(() => onToggle(itemId), [itemId, onToggle]);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={handlePress}
+      testID={`diff-file-collapse-${itemId}`}
+      style={collapseButtonPressableStyle}
+    >
+      <Text style={styles.collapseButtonText}>{collapsed ? "+" : "−"}</Text>
+    </Pressable>
+  );
+}
 
 interface PierreCodeViewProps {
-  items: readonly CodeViewDiffItem[];
+  items: readonly CodeViewDiffItem<PierreReviewAnnotation>[];
   wrapLines: boolean;
   layout: "unified" | "split";
-  renderHeaderMetadata: (item: CodeViewItem) => ReactNode;
+  renderHeaderMetadata: (item: CodeViewItem<PierreReviewAnnotation>) => React.ReactNode;
+  renderHeaderPrefix: (item: CodeViewItem<PierreReviewAnnotation>) => React.ReactNode;
+  renderAnnotation?: (
+    annotation: LineAnnotation<PierreReviewAnnotation> | PierreAnnotation,
+    item: CodeViewItem<PierreReviewAnnotation>,
+  ) => React.ReactNode;
+  onGutterUtilityClick?: (
+    range: { start: number; side?: "deletions" | "additions"; end: number },
+    context: { item: CodeViewItem<PierreReviewAnnotation> },
+  ) => void;
+  gutterUtilityEnabled: boolean;
+  viewerRef: React.Ref<CodeViewHandle<PierreReviewAnnotation>>;
   // Injected by the withUnistyles wrapper below — docs/unistyles.md bans useUnistyles.
   themeType: "light" | "dark";
 }
@@ -28,14 +79,31 @@ function PierreCodeView({
   layout,
   items,
   renderHeaderMetadata,
-}: PierreCodeViewProps): ReactElement {
-  const options = useMemo(
-    // CodeViewReactOptions narrows hunkSeparators ('custom' is vanilla-only);
-    // buildPierreDiffOptions always emits 'line-info', so the cast is safe.
-    () => buildPierreDiffOptions({ themeType, wrapLines, layout }) as CodeViewReactOptions,
-    [themeType, wrapLines, layout],
+  renderHeaderPrefix,
+  renderAnnotation,
+  onGutterUtilityClick,
+  gutterUtilityEnabled,
+  viewerRef,
+}: PierreCodeViewProps): React.JSX.Element {
+  const options = useMemo(() => {
+    const base = buildPierreDiffOptions({ themeType, wrapLines, layout });
+    return {
+      ...base,
+      enableGutterUtility: gutterUtilityEnabled,
+      onGutterUtilityClick,
+    } as CodeViewReactOptions<PierreReviewAnnotation>;
+  }, [gutterUtilityEnabled, layout, onGutterUtilityClick, themeType, wrapLines]);
+
+  return (
+    <CodeView<PierreReviewAnnotation>
+      ref={viewerRef}
+      items={items}
+      options={options}
+      renderHeaderMetadata={renderHeaderMetadata}
+      renderHeaderPrefix={renderHeaderPrefix}
+      renderAnnotation={renderAnnotation}
+    />
   );
-  return <CodeView items={items} options={options} renderHeaderMetadata={renderHeaderMetadata} />;
 }
 
 // The app has 6 unistyles themes; only "light" is light.
@@ -44,55 +112,101 @@ const ThemedPierreCodeView = withUnistyles(PierreCodeView, (_theme, rt) => ({
 }));
 
 type PlatformSharedDiffViewProps = SharedDiffViewProps & {
-  fallback: ComponentType<SharedDiffViewProps>;
+  fallback: React.ComponentType<SharedDiffViewProps>;
 };
 type PierreSegment =
-  | { type: "diffs"; key: string; items: readonly CodeViewDiffItem[] }
+  | { type: "diffs"; key: string; items: readonly CodeViewDiffItem<PierreReviewAnnotation>[] }
   | { type: "status"; key: string; file: SharedDiffViewProps["files"][number] };
 
 export function SharedDiffView({
   files,
   displayPreferences,
   mode,
-  fallback: RNSharedDiffView,
-}: PlatformSharedDiffViewProps): ReactElement {
+}: PlatformSharedDiffViewProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  // Not ported to pierre in Phase 1: tree mode, inline review, and focused-scroll requests.
-  const shouldFallbackToRN =
-    (mode.kind === "working_tree" && (mode.viewMode === "tree" || mode.reviewActions != null)) ||
-    (mode.kind === "working_tab" && (mode.reviewActions != null || mode.focusPath != null));
+  const reviewActions = mode.kind === "commit" ? undefined : mode.reviewActions;
+  const isTreeMode = mode.kind === "working_tree" && mode.viewMode === "tree";
+
+  // Latest-props ref so stable callbacks read current review state.
+  const reviewActionsRef = useRef(reviewActions);
+  reviewActionsRef.current = reviewActions;
+
+  const viewerRef = useRef<CodeViewHandle<PierreReviewAnnotation>>(null);
+  const consumedFocusRequestRef = useRef<string | null>(null);
 
   const filesByPath = useMemo(() => new Map(files.map((f) => [f.path, f])), [files]);
+
   const segments = useMemo<readonly PierreSegment[]>(() => {
     const result: PierreSegment[] = [];
-    let diffItems: CodeViewDiffItem[] = [];
+    let diffItems: CodeViewDiffItem<PierreReviewAnnotation>[] = [];
+
+    const flush = () => {
+      if (diffItems.length > 0) {
+        result.push({ type: "diffs", key: `diffs:${diffItems[0].id}`, items: diffItems });
+        diffItems = [];
+      }
+    };
 
     for (const file of files) {
       if (file.status === "too_large" || file.status === "binary") {
-        if (diffItems.length > 0) {
-          result.push({ type: "diffs", key: `diffs:${diffItems[0].id}`, items: diffItems });
-          diffItems = [];
-        }
+        flush();
         result.push({ type: "status", key: `status:${file.path}`, file });
         continue;
       }
+
+      const isExpanded =
+        mode.kind === "commit" ||
+        mode.expandedPaths == null ||
+        mode.expandedPaths.includes(file.path);
 
       diffItems.push({
         id: file.path,
         type: "diff" as const,
         fileDiff: parsedDiffFileToFileDiffMetadata(file),
+        collapsed: !isExpanded,
+        annotations: buildPierreReviewAnnotations(file, reviewActions),
       });
     }
 
-    if (diffItems.length > 0) {
-      result.push({ type: "diffs", key: `diffs:${diffItems[0].id}`, items: diffItems });
-    }
+    flush();
     return result;
-  }, [files]);
+  }, [files, mode, reviewActions]);
+
+  // Collapse state lives in the panel store (expandedPaths), so the toggle
+  // only writes the store; the rebuilt items flow back through the props.
+  const handleToggleCollapsed = useCallback(
+    (itemId: string) => {
+      if (mode.kind === "commit" || mode.expandedPaths == null) {
+        return;
+      }
+      const isCurrentlyExpanded = mode.expandedPaths.includes(itemId);
+      const next = isCurrentlyExpanded
+        ? mode.expandedPaths.filter((path) => path !== itemId)
+        : [...mode.expandedPaths, itemId];
+      mode.onExpandedPathsChange?.(next);
+    },
+    [mode],
+  );
+
+  const renderHeaderPrefix = useCallback(
+    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => {
+      if (item.type !== "diff" || mode.kind === "commit") {
+        return null;
+      }
+      return (
+        <CollapseToggle
+          collapsed={item.collapsed ?? false}
+          itemId={item.id}
+          onToggle={handleToggleCollapsed}
+        />
+      );
+    },
+    [handleToggleCollapsed, mode.kind],
+  );
 
   const renderHeaderMetadata = useCallback(
-    (item: CodeViewItem): ReactNode => {
+    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => {
       if (item.type !== "diff") {
         return null;
       }
@@ -105,8 +219,79 @@ export function SharedDiffView({
     [filesByPath],
   );
 
-  if (shouldFallbackToRN) {
-    return <RNSharedDiffView files={files} displayPreferences={displayPreferences} mode={mode} />;
+  const renderAnnotation = useCallback(
+    (
+      annotation: LineAnnotation<PierreReviewAnnotation> | PierreAnnotation,
+      item: CodeViewItem<PierreReviewAnnotation>,
+    ): React.ReactNode => {
+      if (item.type !== "diff" || !("side" in annotation) || annotation.metadata == null) {
+        return null;
+      }
+      if (reviewActionsRef.current == null) {
+        return null;
+      }
+      const { reviewTarget, thread } = annotation.metadata;
+      return (
+        <InlineReviewThread
+          reviewTarget={reviewTarget}
+          reviewActions={reviewActionsRef.current}
+          height={thread.height}
+          testID={`inline-review-thread-${reviewTarget.key}`}
+        />
+      );
+    },
+    [],
+  );
+
+  const handleGutterUtilityClick = useCallback(
+    (
+      range: { start: number; side?: "deletions" | "additions"; end: number },
+      context: { item: CodeViewItem<PierreReviewAnnotation> },
+    ) => {
+      if (context.item.type !== "diff") {
+        return;
+      }
+      const file = files.find((f) => f.path === context.item.id);
+      if (!file) {
+        return;
+      }
+      const target = findPierreReviewTarget(file, {
+        side: range.side ?? "additions",
+        lineNumber: range.start,
+      });
+      if (target) {
+        reviewActionsRef.current?.onStartComment(target);
+      }
+    },
+    [files],
+  );
+
+  // Scroll to the focused file when a working_tab focus request arrives.
+  useEffect(() => {
+    if (mode.kind !== "working_tab" || mode.focusPath == null) {
+      return;
+    }
+    const key = `${mode.focusRequestId ?? "initial"}:${mode.focusPath}`;
+    if (consumedFocusRequestRef.current === key) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      viewerRef.current?.scrollTo({ type: "item", id: mode.focusPath ?? "", align: "start" });
+      consumedFocusRequestRef.current = key;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mode]);
+
+  // Tree view mode is the pierre FileTree; everything else is CodeView.
+  if (isTreeMode) {
+    return (
+      <PierreFileTree
+        files={files}
+        collapsedFolders={mode.collapsedFolders}
+        onCollapsedFoldersChange={mode.onCollapsedFoldersChange}
+        onFilePress={mode.onFilePress}
+      />
+    );
   }
 
   return (
@@ -115,8 +300,6 @@ export function SharedDiffView({
         if (segment.type === "status") {
           const { file } = segment;
           return (
-            // Status body mirrors diff-pane.tsx (statusMessageContainer/statusMessageText);
-            // that block is not exported, so it is replicated here with the same i18n keys.
             <View key={segment.key} style={styles.statusMessageContainer}>
               <Text style={styles.statusMessagePath}>{file.path}</Text>
               <Text style={styles.statusMessageText}>
@@ -131,10 +314,15 @@ export function SharedDiffView({
         return (
           <View key={segment.key} style={styles.codeViewContainer}>
             <ThemedPierreCodeView
+              viewerRef={viewerRef}
               items={segment.items}
               wrapLines={displayPreferences.wrapLines}
               layout={displayPreferences.layout}
               renderHeaderMetadata={renderHeaderMetadata}
+              renderHeaderPrefix={renderHeaderPrefix}
+              renderAnnotation={renderAnnotation}
+              onGutterUtilityClick={handleGutterUtilityClick}
+              gutterUtilityEnabled={reviewActions != null}
             />
           </View>
         );
@@ -166,5 +354,20 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.sm,
     color: theme.colors.foregroundMuted,
     fontStyle: "italic",
+  },
+  collapseButton: {
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+    minWidth: 24,
+    alignItems: "center",
+  },
+  collapseButtonPressed: {
+    backgroundColor: theme.colors.surface2,
+  },
+  collapseButtonText: {
+    color: theme.colors.foregroundMuted,
+    fontSize: theme.fontSize.sm,
+    lineHeight: theme.fontSize.sm,
   },
 }));

@@ -155,13 +155,21 @@ export function parsedDiffFileToFileDiffMetadata(file: ParsedDiffFile): FileDiff
     type = "deleted";
   }
 
+  // A new or deleted file's diff is complete: one side is empty and the hunks
+  // carry every line of the other side, so the addition/deletion arrays below
+  // are the full file. Marking it partial would hide those sides from pierre's
+  // editor (canHydrateDiff excludes new/deleted, so a partial new-file diff
+  // can never be hydrated and stays uneditable). Modified diffs stay partial
+  // until the daemon can serve full file contents.
+  const isPartial = type === "change";
+
   return {
     name: file.path,
     type,
     hunks,
     splitLineCount: splitLineTotal,
     unifiedLineCount: unifiedLineTotal,
-    isPartial: true,
+    isPartial,
     deletionLines,
     additionLines,
   };
