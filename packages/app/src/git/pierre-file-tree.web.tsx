@@ -234,8 +234,8 @@ function PierreFileTree({
 // VS Code-shaped token set) and forwards the DiffStat decoration colors.
 const ThemedPierreFileTree = withUnistyles(PierreFileTree, (theme, runtime) => ({
   statColors: {
-    additions: theme.colors.statusMutedSuccess,
-    deletions: theme.colors.statusMutedDanger,
+    additions: theme.colors.diffAddition,
+    deletions: theme.colors.diffDeletion,
   },
   treeStyle: themeToTreeStyles(buildTreeThemeInput(theme, runtime.themeName === "light")),
 }));

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, Pressable } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
-import { Check, Pencil } from "lucide-react-native";
+import { Check, ChevronDown, ChevronRight, Pencil } from "lucide-react-native";
 import {
   CodeView,
   EditProvider,
@@ -21,6 +21,7 @@ import { UnistylesRuntime } from "react-native-unistyles";
 import type { SharedDiffViewProps } from "@/git/diff-pane";
 import { DiffStat } from "@/components/diff-stat";
 import { buildPierreDiffOptions } from "@/git/pierre-diff-options";
+import { buildPierreDiffUnsafeCss } from "@/git/pierre-diff-theme.web";
 import { parsedDiffFileToFileDiffMetadata } from "@/git/pierre-diffs-adapter";
 import {
   buildPierreReviewAnnotations,
@@ -39,6 +40,9 @@ const pencilColorMapping = (theme: Theme) => ({ color: theme.colors.foregroundMu
 const activePencilColorMapping = (theme: Theme) => ({ color: theme.colors.accent });
 const ThemedCheck = withUnistyles(Check);
 const checkColorMapping = (theme: Theme) => ({ color: theme.colors.statusMutedSuccess });
+const ThemedChevronDown = withUnistyles(ChevronDown);
+const ThemedChevronRight = withUnistyles(ChevronRight);
+const chevronColorMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
 
 // Extension → shiki language for pre-warming the editor's main-thread
 // highlighter (the diff render uses the worker pool; the editor loads its own
@@ -104,11 +108,16 @@ function CollapseToggle({ collapsed, itemId, onToggle }: CollapseToggleProps): R
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={collapsed ? "Expand file" : "Collapse file"}
       onPress={handlePress}
       testID={`diff-file-collapse-${itemId}`}
       style={collapseButtonPressableStyle}
     >
-      <Text style={styles.collapseButtonText}>{collapsed ? "+" : "−"}</Text>
+      {collapsed ? (
+        <ThemedChevronRight size={14} uniProps={chevronColorMapping} />
+      ) : (
+        <ThemedChevronDown size={14} uniProps={chevronColorMapping} />
+      )}
     </Pressable>
   );
 }
@@ -159,15 +168,6 @@ function SaveButton({ itemId, label, onSave }: SaveButtonProps): React.JSX.Eleme
 // The diffs-container host sizes itself from this style; without an explicit
 // flex fill it collapses to 0 height inside the flex column and the
 // virtualizer renders nothing.
-// pierre's stickyHeaders option breaks the virtualizer in this layout, so the
-// header is pinned with the same [data-diffs-header] rule pierre would apply.
-const STICKY_HEADER_CSS = `[data-diffs-header] {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background-color: var(--diffs-bg);
-}`;
-
 const CODE_VIEW_HOST_STYLE = {
   flex: 1,
   minHeight: 0,
@@ -204,6 +204,7 @@ interface PierreCodeViewProps {
   viewerRef: React.Ref<CodeViewHandle<PierreReviewAnnotation>>;
   // Injected by the withUnistyles wrapper below — docs/unistyles.md bans useUnistyles.
   themeType: "light" | "dark";
+  theme: Theme;
 }
 
 function PierreCodeView({
@@ -222,6 +223,7 @@ function PierreCodeView({
   loadDiffFiles,
   gutterUtilityEnabled,
   viewerRef,
+  theme,
 }: PierreCodeViewProps): React.JSX.Element {
   const options = useMemo(() => {
     const base = buildPierreDiffOptions({ themeType, wrapLines, layout });
@@ -230,13 +232,21 @@ function PierreCodeView({
       enableGutterUtility: gutterUtilityEnabled,
       onGutterUtilityClick,
       loadDiffFiles,
-      // Keep each file's header pinned while its content scrolls (the app
-      // cannot use CodeView's stickyHeaders option - it breaks the
-      // virtualizer's paged-scroll window in this layout), so inject the
-      // same [data-diffs-header] sticky rule pierre applies for it.
-      unsafeCSS: STICKY_HEADER_CSS,
+      // Pins the file header while scrolling and restyles the whole diff
+      // surface from the paseo theme (pierre's stickyHeaders option breaks
+      // the virtualizer in this layout, and its github shiki chrome clashes
+      // with the app themes).
+      unsafeCSS: buildPierreDiffUnsafeCss(theme),
     } as CodeViewReactOptions<PierreReviewAnnotation>;
-  }, [gutterUtilityEnabled, layout, loadDiffFiles, onGutterUtilityClick, themeType, wrapLines]);
+  }, [
+    gutterUtilityEnabled,
+    layout,
+    loadDiffFiles,
+    onGutterUtilityClick,
+    theme,
+    themeType,
+    wrapLines,
+  ]);
 
   // The CodeView root is the scroll container; double-click to start editing
   // and ctrl/cmd+s to save both need to be caught at this level so they work
@@ -277,8 +287,9 @@ function PierreCodeView({
 }
 
 // The app has 6 unistyles themes; only "light" is light.
-const ThemedPierreCodeView = withUnistyles(PierreCodeView, (_theme, rt) => ({
+const ThemedPierreCodeView = withUnistyles(PierreCodeView, (theme, rt) => ({
   themeType: rt.themeName === "light" ? ("light" as const) : ("dark" as const),
+  theme,
 }));
 
 type PlatformSharedDiffViewProps = SharedDiffViewProps & {
@@ -429,7 +440,7 @@ export function SharedDiffView({
       if (!file) {
         return null;
       }
-      return <DiffStat additions={file.additions} deletions={file.deletions} />;
+      return <DiffStat additions={file.additions} deletions={file.deletions} variant="vivid" />;
     },
     [filesByPath],
   );
