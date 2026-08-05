@@ -826,6 +826,8 @@ export const en = {
         saved: "File saved",
         saveError: "Could not save file",
         saveConflict: "File changed on disk — refresh and retry",
+        saveFile: "Save file",
+        unsavedChanges: "Unsaved changes",
         commits: {
           title: "Commits",
           countLabel: "{{count}} workspace commits",

@@ -838,6 +838,8 @@ export const ru: TranslationResources = {
         saved: "Файл сохранён",
         saveError: "Не удалось сохранить файл",
         saveConflict: "Файл изменился на диске — обновите и повторите",
+        saveFile: "Сохранить файл",
+        unsavedChanges: "Несохранённые изменения",
         commits: {
           title: "Коммиты",
           countLabel: "{{count}} коммитов рабочего пространства",

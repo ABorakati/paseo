@@ -838,6 +838,8 @@ export const ptBR: TranslationResources = {
         saved: "Arquivo salvo",
         saveError: "Não foi possível salvar o arquivo",
         saveConflict: "O arquivo mudou no disco — atualize e tente novamente",
+        saveFile: "Salvar arquivo",
+        unsavedChanges: "Alterações não salvas",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits do espaço de trabalho",

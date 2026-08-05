@@ -847,6 +847,8 @@ export const es: TranslationResources = {
         saved: "Archivo guardado",
         saveError: "No se pudo guardar el archivo",
         saveConflict: "El archivo cambió en disco — actualiza e inténtalo de nuevo",
+        saveFile: "Guardar archivo",
+        unsavedChanges: "Cambios sin guardar",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits del espacio de trabajo",

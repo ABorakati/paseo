@@ -846,6 +846,8 @@ export const fr: TranslationResources = {
         saved: "Fichier enregistré",
         saveError: "Impossible d'enregistrer le fichier",
         saveConflict: "Le fichier a changé sur le disque — actualisez et réessayez",
+        saveFile: "Enregistrer le fichier",
+        unsavedChanges: "Modifications non enregistrées",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",

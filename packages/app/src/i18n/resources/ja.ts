@@ -827,6 +827,8 @@ export const ja: TranslationResources = {
         saved: "ファイルを保存しました",
         saveError: "ファイルを保存できませんでした",
         saveConflict: "ディスク上のファイルが変更されました — 更新して再試行してください",
+        saveFile: "ファイルを保存",
+        unsavedChanges: "未保存の変更",
         commits: {
           title: "コミット",
           countLabel: "ワークスペースのコミット数: {{count}}",

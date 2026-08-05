@@ -808,6 +808,8 @@ export const zhCN: TranslationResources = {
         saved: "文件已保存",
         saveError: "无法保存文件",
         saveConflict: "文件已在磁盘上更改 — 请刷新后重试",
+        saveFile: "保存文件",
+        unsavedChanges: "未保存的更改",
         commits: {
           title: "提交",
           countLabel: "{{count}} 个工作区提交",

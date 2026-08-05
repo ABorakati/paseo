@@ -816,6 +816,8 @@ export const ar: TranslationResources = {
         saved: "تم حفظ الملف",
         saveError: "تعذّر حفظ الملف",
         saveConflict: "تغيّر الملف على القرص — حدّث وحاول مجددًا",
+        saveFile: "حفظ الملف",
+        unsavedChanges: "تغييرات غير محفوظة",
         commits: {
           title: "الإيداعات",
           countLabel: "{{count}} من إيداعات مساحة العمل",

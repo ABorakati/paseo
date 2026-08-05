@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, Pressable } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
-import { Pencil } from "lucide-react-native";
+import { Check, Pencil } from "lucide-react-native";
 import {
   CodeView,
   EditProvider,
@@ -36,6 +36,9 @@ import type { Theme } from "@/styles/theme";
 type PierreAnnotation = DiffLineAnnotation<PierreReviewAnnotation>;
 const ThemedPencil = withUnistyles(Pencil);
 const pencilColorMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
+const activePencilColorMapping = (theme: Theme) => ({ color: theme.colors.accent });
+const ThemedCheck = withUnistyles(Check);
+const checkColorMapping = (theme: Theme) => ({ color: theme.colors.statusMutedSuccess });
 
 // Extension → shiki language for pre-warming the editor's main-thread
 // highlighter (the diff render uses the worker pool; the editor loads its own
@@ -85,6 +88,10 @@ const editButtonPressableStyle = ({ pressed }: PressableState) => [
   styles.editButton,
   pressed && styles.editButtonPressed,
 ];
+const saveButtonPressableStyle = ({ pressed }: PressableState) => [
+  styles.saveButton,
+  pressed && styles.saveButtonPressed,
+];
 
 interface CollapseToggleProps {
   collapsed: boolean;
@@ -109,10 +116,11 @@ function CollapseToggle({ collapsed, itemId, onToggle }: CollapseToggleProps): R
 interface EditToggleProps {
   itemId: string;
   label: string;
+  active: boolean;
   onToggle: (itemId: string) => void;
 }
 
-function EditToggle({ itemId, label, onToggle }: EditToggleProps): React.JSX.Element {
+function EditToggle({ itemId, label, active, onToggle }: EditToggleProps): React.JSX.Element {
   const handlePress = useCallback(() => onToggle(itemId), [itemId, onToggle]);
   return (
     <Pressable
@@ -122,7 +130,28 @@ function EditToggle({ itemId, label, onToggle }: EditToggleProps): React.JSX.Ele
       testID={`diff-file-edit-${itemId}`}
       style={editButtonPressableStyle}
     >
-      <ThemedPencil size={14} uniProps={pencilColorMapping} />
+      <ThemedPencil size={14} uniProps={active ? activePencilColorMapping : pencilColorMapping} />
+    </Pressable>
+  );
+}
+
+interface SaveButtonProps {
+  itemId: string;
+  label: string;
+  onSave: (itemId: string) => void;
+}
+
+function SaveButton({ itemId, label, onSave }: SaveButtonProps): React.JSX.Element {
+  const handlePress = useCallback(() => onSave(itemId), [itemId, onSave]);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={handlePress}
+      testID={`diff-file-save-${itemId}`}
+      style={saveButtonPressableStyle}
+    >
+      <ThemedCheck size={14} uniProps={checkColorMapping} />
     </Pressable>
   );
 }
@@ -130,6 +159,15 @@ function EditToggle({ itemId, label, onToggle }: EditToggleProps): React.JSX.Ele
 // The diffs-container host sizes itself from this style; without an explicit
 // flex fill it collapses to 0 height inside the flex column and the
 // virtualizer renders nothing.
+// pierre's stickyHeaders option breaks the virtualizer in this layout, so the
+// header is pinned with the same [data-diffs-header] rule pierre would apply.
+const STICKY_HEADER_CSS = `[data-diffs-header] {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--diffs-bg);
+}`;
+
 const CODE_VIEW_HOST_STYLE = {
   flex: 1,
   minHeight: 0,
@@ -156,6 +194,9 @@ interface PierreCodeViewProps {
     context: { item: CodeViewItem<PierreReviewAnnotation> },
   ) => void;
   onItemEditComplete?: (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => void;
+  onItemEditChange?: (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
+  onDoubleClick?: (event: MouseEvent) => void;
   loadDiffFiles?: (
     fileDiff: import("@pierre/diffs").FileDiffMetadata,
   ) => Promise<import("@pierre/diffs").FileDiffLoadedFiles | null>;
@@ -174,7 +215,10 @@ function PierreCodeView({
   renderHeaderPrefix,
   renderAnnotation,
   onGutterUtilityClick,
+  onItemEditChange,
   onItemEditComplete,
+  onKeyDown,
+  onDoubleClick,
   loadDiffFiles,
   gutterUtilityEnabled,
   viewerRef,
@@ -186,17 +230,46 @@ function PierreCodeView({
       enableGutterUtility: gutterUtilityEnabled,
       onGutterUtilityClick,
       loadDiffFiles,
+      // Keep each file's header pinned while its content scrolls (the app
+      // cannot use CodeView's stickyHeaders option - it breaks the
+      // virtualizer's paged-scroll window in this layout), so inject the
+      // same [data-diffs-header] sticky rule pierre applies for it.
+      unsafeCSS: STICKY_HEADER_CSS,
     } as CodeViewReactOptions<PierreReviewAnnotation>;
   }, [gutterUtilityEnabled, layout, loadDiffFiles, onGutterUtilityClick, themeType, wrapLines]);
+
+  // The CodeView root is the scroll container; double-click to start editing
+  // and ctrl/cmd+s to save both need to be caught at this level so they work
+  // regardless of where the pointer/focus is inside the content.
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const setHostRef = useCallback((node: HTMLDivElement | null) => {
+    hostRef.current = node;
+  }, []);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host == null) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => onKeyDown?.(event);
+    const handleDoubleClick = (event: MouseEvent) => onDoubleClick?.(event);
+    host.addEventListener("keydown", handleKeyDown);
+    host.addEventListener("dblclick", handleDoubleClick);
+    return () => {
+      host.removeEventListener("keydown", handleKeyDown);
+      host.removeEventListener("dblclick", handleDoubleClick);
+    };
+  }, [onDoubleClick, onKeyDown]);
 
   return (
     <CodeView<PierreReviewAnnotation>
       ref={viewerRef}
       items={items}
       options={options}
+      containerRef={setHostRef}
       renderHeaderMetadata={renderHeaderMetadata}
       renderHeaderPrefix={renderHeaderPrefix}
       renderAnnotation={renderAnnotation}
+      onItemEditChange={onItemEditChange}
       onItemEditComplete={onItemEditComplete}
       style={CODE_VIEW_HOST_STYLE}
     />
@@ -247,6 +320,14 @@ export function SharedDiffView({
   const editPathsRef = useRef(editPaths);
   editPathsRef.current = editPaths;
 
+  // Files with unsaved edits (dirty dot) and the latest FileContents per
+  // editing item, so Ctrl+S / the save button can write without a live
+  // editor handle.
+  const [dirtyPaths, setDirtyPaths] = useState<ReadonlySet<string>>(() => new Set());
+  const dirtyPathsRef = useRef(dirtyPaths);
+  dirtyPathsRef.current = dirtyPaths;
+  const latestContentsRef = useRef(new Map<string, FileContents>());
+
   // Pre-warm the editor's main-thread shared highlighter so the first edit
   // session mounts quickly (the diff render highlights on the worker pool;
   // the editor's own highlighter loads lazily and can take seconds).
@@ -259,7 +340,7 @@ export function SharedDiffView({
     const themeName =
       UnistylesRuntime.themeName === "light" ? "github-light-default" : "github-dark-default";
     const langs = [...new Set(files.map((file) => languageForPath(file.path)))];
-    void preloadHighlighter({ themes: [themeName], langs }).catch(() => { });
+    void preloadHighlighter({ themes: [themeName], langs }).catch(() => {});
   }, [files]);
   // CodeView reconciles items only when their `version` changes
   // (syncItemRecord early-returns on equal versions), so every rebuild that
@@ -461,11 +542,11 @@ export function SharedDiffView({
         }
         const viewer = viewerRef.current?.getInstance() as
           | {
-            items?: Array<{
-              item?: { id?: string };
-              instance?: { syncRenderViewToEditor(): void; fileContainer?: HTMLElement | null };
-            }>;
-          }
+              items?: Array<{
+                item?: { id?: string };
+                instance?: { syncRenderViewToEditor(): void; fileContainer?: HTMLElement | null };
+              }>;
+            }
           | undefined;
         const record = viewer?.items?.find((entry) => entry.item?.id === itemId);
         const instance = record?.instance;
@@ -498,20 +579,158 @@ export function SharedDiffView({
         <EditToggle
           itemId={item.id}
           label={t("workspace.git.diff.editFile")}
+          active={editPaths.has(item.id)}
           onToggle={handleToggleEdit}
         />
       );
     },
-    [filesByPath, handleToggleEdit, t],
+    [editPaths, filesByPath, handleToggleEdit, t],
+  );
+
+  const handleItemEditChange = useCallback(
+    (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => {
+      latestContentsRef.current.set(item.id, file);
+      setDirtyPaths((current) => {
+        if (current.has(item.id)) {
+          return current;
+        }
+        const next = new Set(current);
+        next.add(item.id);
+        return next;
+      });
+    },
+    [],
+  );
+
+  // Shared write: optimistic-concurrency check via a fresh read, then the
+  // write. The daemon retries repo-relative paths at the git worktree root.
+  // Returns whether the write landed.
+  const writeFileContents = useCallback(
+    async (itemId: string, file: FileContents): Promise<boolean> => {
+      const ctx = editContextRef.current;
+      const c = clientRef.current;
+      if (!ctx || !c) {
+        return false;
+      }
+      const read = await c.readFile(ctx.cwd, itemId).catch(() => null);
+      const result = await c
+        .writeFile({
+          cwd: ctx.cwd,
+          path: itemId,
+          content: file.contents,
+          expectedModifiedAt: read?.modifiedAt ?? "",
+          expectedRevision: read?.revision,
+        })
+        .catch(() => ({ status: "error" as const, error: "write failed" }));
+      if (result.status === "conflict" && result.version?.status === "missing") {
+        // The diff paths are repo-relative; the daemon retries writes at the
+        // git worktree root when the target is missing at the request cwd, so
+        // this only fires when the file does not exist anywhere in the repo.
+        toast.show(t("workspace.git.diff.saveError"));
+        return false;
+      }
+      if (result.status === "conflict") {
+        toast.show(t("workspace.git.diff.saveConflict"));
+        return false;
+      }
+      if (result.status === "error") {
+        toast.show(t("workspace.git.diff.saveError"));
+        return false;
+      }
+      toast.show(t("workspace.git.diff.saved"));
+      return true;
+    },
+    [t, toast],
+  );
+
+  // Save without leaving edit mode (Ctrl+S / save button): keeps the session
+  // open and clears the dirty dot on success.
+  const handleSaveItem = useCallback(
+    (itemId: string) => {
+      const file = latestContentsRef.current.get(itemId);
+      if (!file) {
+        return;
+      }
+      void writeFileContents(itemId, file).then((saved) => {
+        if (saved) {
+          setDirtyPaths((current) => {
+            if (!current.has(itemId)) {
+              return current;
+            }
+            const next = new Set(current);
+            next.delete(itemId);
+            return next;
+          });
+        }
+        return saved;
+      });
+    },
+    [writeFileContents],
+  );
+
+  // Ctrl/Cmd+S saves every editing file with unsaved changes; the browser's
+  // default "save page" is suppressed.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "s") {
+        return;
+      }
+      if (editPathsRef.current.size === 0) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      for (const itemId of editPathsRef.current) {
+        if (dirtyPathsRef.current.has(itemId)) {
+          handleSaveItem(itemId);
+        }
+      }
+    },
+    [handleSaveItem],
+  );
+
+  // Double-click on a file's code area starts editing (only added files are
+  // editable until the daemon can serve the old side of modified files).
+  const handleDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      if (editContextRef.current == null) {
+        return;
+      }
+      // Header clicks (collapse toggle, stat, buttons) never start editing.
+      if (
+        event
+          .composedPath()
+          .some((el) => el instanceof HTMLElement && el.hasAttribute("data-diffs-header"))
+      ) {
+        return;
+      }
+      const container = event
+        .composedPath()
+        .find((el) => el instanceof HTMLElement && el.tagName === "DIFFS-CONTAINER");
+      if (!(container instanceof HTMLElement)) {
+        return;
+      }
+      const viewer = viewerRef.current?.getInstance() as
+        | {
+            items?: Array<{ item?: { id?: string }; element?: HTMLElement | null }>;
+          }
+        | undefined;
+      const record = viewer?.items?.find((entry) => entry.element === container);
+      const itemId = record?.item?.id;
+      if (!itemId || editPathsRef.current.has(itemId)) {
+        return;
+      }
+      const file = filesRef.current.find((f) => f.path === itemId);
+      if (!file?.isNew) {
+        return;
+      }
+      handleToggleEdit(itemId);
+    },
+    [handleToggleEdit],
   );
 
   const handleItemEditComplete = useCallback(
     (item: CodeViewItem<PierreReviewAnnotation>, file: FileContents) => {
-      const ctx = editContextRef.current;
-      const c = clientRef.current;
-      if (!ctx || !c) {
-        return;
-      }
       // Turn the item back to read-only immediately; the refreshed working
       // diff replaces the item content once the daemon applies the write.
       setEditPaths((current) => {
@@ -522,34 +741,18 @@ export function SharedDiffView({
         next.delete(item.id);
         return next;
       });
-      void (async () => {
-        // Fetch the current version so the daemon's optimistic-concurrency
-        // check catches edits that landed while the file was being edited.
-        const read = await c.readFile(ctx.cwd, item.id).catch(() => null);
-        const result = await c
-          .writeFile({
-            cwd: ctx.cwd,
-            path: item.id,
-            content: file.contents,
-            expectedModifiedAt: read?.modifiedAt ?? "",
-            expectedRevision: read?.revision,
-          })
-          .catch(() => ({ status: "error" as const, error: "write failed" }));
-        if (result.status === "conflict" && result.version?.status === "missing") {
-          // The diff paths are repo-relative; the daemon retries writes at the
-          // git worktree root when the target is missing at the request cwd, so
-          // this only fires when the file does not exist anywhere in the repo.
-          toast.show(t("workspace.git.diff.saveError"));
-        } else if (result.status === "conflict") {
-          toast.show(t("workspace.git.diff.saveConflict"));
-        } else if (result.status === "error") {
-          toast.show(t("workspace.git.diff.saveError"));
-        } else {
-          toast.show(t("workspace.git.diff.saved"));
+      setDirtyPaths((current) => {
+        if (!current.has(item.id)) {
+          return current;
         }
-      })();
+        const next = new Set(current);
+        next.delete(item.id);
+        return next;
+      });
+      latestContentsRef.current.delete(item.id);
+      void writeFileContents(item.id, file);
     },
-    [t, toast],
+    [writeFileContents],
   );
 
   const createEditor = useMemo<CreateEditor<PierreReviewAnnotation>>(
@@ -574,13 +777,31 @@ export function SharedDiffView({
   }, [mode]);
 
   const renderItemHeaderMetadata = useCallback(
-    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => (
-      <View style={styles.headerMetaRow}>
-        {renderHeaderMetadata(item)}
-        {renderEditToggle(item)}
-      </View>
-    ),
-    [renderEditToggle, renderHeaderMetadata],
+    (item: CodeViewItem<PierreReviewAnnotation>): React.ReactNode => {
+      const editing = editPaths.has(item.id);
+      const dirty = dirtyPaths.has(item.id);
+      return (
+        <View style={styles.headerMetaRow}>
+          {renderHeaderMetadata(item)}
+          {editing && dirty ? (
+            <View
+              style={styles.dirtyDot}
+              testID={`diff-file-dirty-${item.id}`}
+              accessibilityLabel={t("workspace.git.diff.unsavedChanges")}
+            />
+          ) : null}
+          {editing && dirty ? (
+            <SaveButton
+              itemId={item.id}
+              label={t("workspace.git.diff.saveFile")}
+              onSave={handleSaveItem}
+            />
+          ) : null}
+          {renderEditToggle(item)}
+        </View>
+      );
+    },
+    [dirtyPaths, editPaths, handleSaveItem, renderEditToggle, renderHeaderMetadata, t],
   );
 
   // Tree view mode is the pierre FileTree; everything else is CodeView.
@@ -624,7 +845,10 @@ export function SharedDiffView({
                 renderHeaderPrefix={renderHeaderPrefix}
                 renderAnnotation={renderAnnotation}
                 onGutterUtilityClick={handleGutterUtilityClick}
+                onItemEditChange={handleItemEditChange}
                 onItemEditComplete={handleItemEditComplete}
+                onKeyDown={handleKeyDown}
+                onDoubleClick={handleDoubleClick}
                 loadDiffFiles={loadDiffFiles}
                 gutterUtilityEnabled={reviewActions != null}
               />
@@ -686,5 +910,18 @@ const styles = StyleSheet.create((theme) => ({
   },
   editButtonPressed: {
     backgroundColor: theme.colors.surface2,
+  },
+  saveButton: {
+    padding: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+  },
+  saveButtonPressed: {
+    backgroundColor: theme.colors.surface2,
+  },
+  dirtyDot: {
+    width: 6,
+    height: 6,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.statusWarning,
   },
 }));
