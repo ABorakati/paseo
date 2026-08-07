@@ -1,0 +1,16 @@
+packages/server/src/terminal/terminal.test.ts
+  h_0ae9538d78aa59 246-271
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 248,250-255,262,264,267-268,270-271,273-274,276-277,279-280,282-283,285-291,945
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "4823a87f183bd5a92e50fa5f072b41354c89a58a",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
