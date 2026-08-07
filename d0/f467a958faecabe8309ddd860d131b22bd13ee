@@ -1,0 +1,18 @@
+docs/terminal-activity.md
+  h_0ae9538d78aa59 50-62
+packages/app/src/screens/settings-screen.tsx
+  h_0ae9538d78aa59 578-580
+packages/server/src/terminal/terminal.test.ts
+  h_0ae9538d78aa59 30,352-395
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d0f467a958faecabe8309ddd860d131b22bd13ee",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
