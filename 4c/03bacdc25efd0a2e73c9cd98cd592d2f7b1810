@@ -1,0 +1,16 @@
+packages/app/src/screens/settings-screen.tsx
+  h_0ae9538d78aa59 366-369,371-376,412-425,569
+packages/desktop/src/daemon/daemon-manager.ts
+  h_0ae9538d78aa59 6,444-447,577-598
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "4c03bacdc25efd0a2e73c9cd98cd592d2f7b1810",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
