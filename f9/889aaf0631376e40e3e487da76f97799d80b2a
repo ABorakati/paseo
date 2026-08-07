@@ -1,0 +1,18 @@
+packages/server/src/executable-resolution/executable-resolution.probe.test.ts
+  h_0ae9538d78aa59 183-217
+packages/server/src/executable-resolution/executable-resolution.ts
+  h_0ae9538d78aa59 82-91,95,98,147,154-156,160,167,172
+packages/server/src/terminal/terminal-shell.ts
+  h_0ae9538d78aa59 11-12,98-107,123-125,134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "f9889aaf0631376e40e3e487da76f97799d80b2a",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
