@@ -1,0 +1,16 @@
+packages/app/src/screens/new-workspace-screen.tsx
+  h_0ae9538d78aa59 34,185-186,823-828,830-833,1132-1140,1162,1167,1982-1986,1990-1991,1995-2006,2008-2013,2088-2095,2113,2144,2200-2202
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 308,315,320
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "960e2e51cdde7a7ad9aaad3e3970770e4d955e47",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
