@@ -1,0 +1,22 @@
+packages/app/src/screens/new-workspace-screen.tsx
+  h_0ae9538d78aa59 2089-2094,2117-2120
+packages/app/src/screens/workspace/terminals/use-workspace-terminals.ts
+  h_0ae9538d78aa59 134-141
+packages/server/src/terminal/terminal-manager.test.ts
+  h_0ae9538d78aa59 82-105
+packages/server/src/terminal/terminal-profile-shell.test.ts
+  h_0ae9538d78aa59 1-67
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 937-941,944
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "dfb4c5f0fb259461e5477b910bbd8b1fbe7f5fb9",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
