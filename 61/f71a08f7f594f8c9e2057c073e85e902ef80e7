@@ -1,0 +1,72 @@
+packages/server/src/server/daemon-config-store.ts
+  h_0ae9538d78aa59 362-363
+packages/server/src/terminal/terminal-shell-config.test.ts
+  h_0ae9538d78aa59 1-36
+packages/app/src/screens/settings/providers-section.test.tsx
+  h_0ae9538d78aa59 315-316
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 12,236-244,937-941,944
+packages/server/src/terminal/terminal-manager.ts
+  h_0ae9538d78aa59 60,318,357
+packages/server/src/terminal/terminal-session-controller.ts
+  h_0ae9538d78aa59 8,38,88-90,113-114,127,141,171,219-220,565-567,625-644
+packages/server/src/terminal/terminal-worker-protocol.ts
+  h_0ae9538d78aa59 27
+docs/terminal-activity.md
+  h_0ae9538d78aa59 50-62
+packages/server/src/terminal/terminal-manager.test.ts
+  h_0ae9538d78aa59 64-105
+packages/server/src/terminal/terminal-profile-shell.test.ts
+  h_0ae9538d78aa59 1-67
+packages/server/src/executable-resolution/executable-resolution.probe.test.ts
+  h_0ae9538d78aa59 183-217
+packages/client/src/index.test.ts
+  h_0ae9538d78aa59 699-700,756-757
+packages/app/src/screens/settings/browser-tools-config.test.ts
+  h_0ae9538d78aa59 20-21
+packages/server/src/terminal/terminal-shell.ts
+  h_0ae9538d78aa59 1-214
+packages/app/src/screens/workspace/terminals/use-workspace-terminals.ts
+  h_0ae9538d78aa59 144
+packages/server/src/server/bootstrap.ts
+  h_0ae9538d78aa59 402-403,537-538
+packages/protocol/src/messages.ts
+  h_0ae9538d78aa59 163-166,184-185,2398,2412-2418,2676,2964-2967,5204-5214,5518,5955-5956
+packages/server/src/server/exports.ts
+  h_0ae9538d78aa59 59-66
+packages/server/src/server/config.ts
+  h_0ae9538d78aa59 436-441,443-450,468
+packages/server/src/server/persisted-config.ts
+  h_0ae9538d78aa59 262-263
+packages/server/src/executable-resolution/executable-resolution.ts
+  h_0ae9538d78aa59 20-23,28-45,82-91,95,98,147,154-156,160,167,172
+  h_0ae9538d78aa59 46
+packages/server/src/server/session.ts
+  h_0ae9538d78aa59 30,928-929
+packages/app/src/screens/new-workspace-screen.tsx
+  h_0ae9538d78aa59 2104-2108
+packages/client/src/daemon-client.ts
+  h_0ae9538d78aa59 12,493,4938,4949,4974-4981
+packages/desktop/scripts/dev.ps1
+  h_0ae9538d78aa59 118
+packages/server/src/server/websocket-server.ts
+  h_0ae9538d78aa59 1610-1611
+packages/server/src/terminal/terminal.test.ts
+  h_0ae9538d78aa59 5,8,10,30,248-296,299-302,304-311,314-339,341-349,352-415,417-424,426-436
+  h_0ae9538d78aa59 297-298,303,312-313,340,350-351,416,425,437
+packages/app/src/data/push-router.test.ts
+  h_0ae9538d78aa59 46-47
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 17,29-30,1772-1922,1935-1937
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "61f71a08f7f594f8c9e2057c073e85e902ef80e7",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
