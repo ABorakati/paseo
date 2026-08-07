@@ -1,0 +1,20 @@
+packages/app/src/hooks/use-settings/storage.ts
+  h_0ae9538d78aa59 37-38,58-59
+packages/app/src/screens/settings-screen.tsx
+  h_0ae9538d78aa59 356-359,366-377,549
+packages/server/src/terminal/terminal.test.ts
+  h_0ae9538d78aa59 252-253,273-280
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 248,298-303
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d581a02a79f6f70cbfd11fcf1dedc97c6ed694eb",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
