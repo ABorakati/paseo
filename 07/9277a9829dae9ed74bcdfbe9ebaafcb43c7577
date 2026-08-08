@@ -1,0 +1,18 @@
+packages/app/src/components/ui/menu/menu-overlay.tsx
+  h_0ae9538d78aa59 232-233,263,280-285
+packages/app/src/components/ui/menu/menu-sub.tsx
+  h_0ae9538d78aa59 11,19,57,81-82,84-87,115,119-120,130-134
+packages/app/src/components/ui/menu/menu-surface.tsx
+  h_0ae9538d78aa59 8,79-81,171-177,179-187,291,294-297,317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "079277a9829dae9ed74bcdfbe9ebaafcb43c7577",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
