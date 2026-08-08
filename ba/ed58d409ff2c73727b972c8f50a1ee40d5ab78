@@ -1,0 +1,38 @@
+.tmp/diff1.txt
+  h_0ae9538d78aa59 1-1502
+.tmp/diff11.txt
+  h_0ae9538d78aa59 1-232
+.tmp/diff2.txt
+  h_0ae9538d78aa59 1-237
+.tmp/diff5.txt
+  h_0ae9538d78aa59 1-97
+.tmp/diff7.txt
+  h_0ae9538d78aa59 1-132
+.tmp/diff9.txt
+  h_0ae9538d78aa59 1-206
+packages/app/src/components/ui/menu/menu-anchor.ts
+  h_0ae9538d78aa59 46-52
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 67,1487-1491,1794,1797,1821-1826,2051
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 44,238,244,248-256,343-346,348-352,394,462-464,470,487-492
+packages/protocol/src/messages.ts
+  h_0ae9538d78aa59 3003-3004
+packages/server/src/server/bootstrap.test.ts
+  h_0ae9538d78aa59 83-86,103-118
+packages/server/src/server/bootstrap.ts
+  h_0ae9538d78aa59 167,544-547,550-551
+packages/server/src/server/websocket-server.ts
+  h_0ae9538d78aa59 1612-1613
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "baed58d409ff2c73727b972c8f50a1ee40d5ab78",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
