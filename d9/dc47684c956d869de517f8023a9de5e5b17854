@@ -1,0 +1,16 @@
+packages/server/src/executable-resolution/executable-resolution.test.ts
+  h_0ae9538d78aa59 177-182,184
+packages/server/src/executable-resolution/executable-resolution.ts
+  h_0ae9538d78aa59 2,127-135,146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d9dc47684c956d869de517f8023a9de5e5b17854",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
