@@ -1,0 +1,76 @@
+packages/app/src/data/push-router.test.ts
+  h_0ae9538d78aa59 46
+packages/app/src/i18n/resources/ar.ts
+  h_0ae9538d78aa59 2109-2110,2127-2130
+packages/app/src/i18n/resources/en.ts
+  h_0ae9538d78aa59 2120-2121,2138-2141
+packages/app/src/i18n/resources/es.ts
+  h_0ae9538d78aa59 2159-2160,2177-2180
+packages/app/src/i18n/resources/fr.ts
+  h_0ae9538d78aa59 2163-2164,2181-2184
+packages/app/src/i18n/resources/ja.ts
+  h_0ae9538d78aa59 2128-2129,2146-2149
+packages/app/src/i18n/resources/ko.ts
+  h_0ae9538d78aa59 2121-2122,2139-2142
+packages/app/src/i18n/resources/pt-BR.ts
+  h_0ae9538d78aa59 2143-2144,2161-2164
+packages/app/src/i18n/resources/ru.ts
+  h_0ae9538d78aa59 2148-2149,2166-2169
+packages/app/src/i18n/resources/zh-CN.ts
+  h_0ae9538d78aa59 2087-2088,2105-2108
+packages/app/src/screens/settings/browser-tools-config.test.ts
+  h_0ae9538d78aa59 20
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 5,7,21,30-37,44,92-93,116-117,1456-1497,1502-1504,1509,1516-1517,1522,1530,1565-1576,1578-1588,1632-1638,1653-1669,1749-1756,1758,1768,1811-1868,1870-1898,1900,1919,1930-1931,1936,1947-1951,2003-2008,2014-2019,2029-2033
+packages/app/src/screens/settings/providers-section.test.tsx
+  h_0ae9538d78aa59 315
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 6-7,9-18,20-21,23-36,38-43,46,51-68,71-79,87-155,158-159,163,165,168,172,174-176,178,181-182,186-202,205-207,210-228,231-263,265-269,272-274,276-278,280-282,286,290,296-297,300,302,304,306-307,309-322,325-327,329-330,332-334,336-361,363-365,367-389,392-393,395,397-399,401-406,408-411,413-447,450-474
+packages/client/src/index.test.ts
+  h_0ae9538d78aa59 699,755
+packages/protocol/src/messages.ts
+  h_0ae9538d78aa59 163-166,184,3003-3006,5273-5276
+packages/server/src/server/bootstrap.test.ts
+  h_0ae9538d78aa59 1-4,6-23,77-127
+packages/server/src/server/bootstrap.ts
+  h_0ae9538d78aa59 167-168,404,513-567,592,599-609,625
+packages/server/src/server/config.ts
+  h_0ae9538d78aa59 436-438,441-442,444,446-448,458,463,492,534
+packages/server/src/server/daemon-config-store.test.ts
+  h_0ae9538d78aa59 466-495
+packages/server/src/server/daemon-config-store.ts
+  h_0ae9538d78aa59 362
+packages/server/src/server/persisted-config.ts
+  h_0ae9538d78aa59 262-263
+packages/server/src/server/session.ts
+  h_0ae9538d78aa59 30,938
+packages/server/src/server/websocket-server.ts
+  h_0ae9538d78aa59 1612-1613
+packages/server/src/terminal/terminal-default-profile.test.ts
+  h_0ae9538d78aa59 2-3,5-12,15-23,26-28,30-32,34,37-39,41-62
+packages/server/src/terminal/terminal-default-profile.ts
+  h_0ae9538d78aa59 1-36
+packages/server/src/terminal/terminal-profile-shell.test.ts
+  h_0ae9538d78aa59 7-8,40-42
+packages/server/src/terminal/terminal-session-controller.test.ts
+  h_0ae9538d78aa59 317-384
+packages/server/src/terminal/terminal-session-controller.ts
+  h_0ae9538d78aa59 39,89-91,142,172,560-566,571-573
+packages/server/src/terminal/terminal-shell.ts
+  h_0ae9538d78aa59 168-174,177-179,188,191-194,196
+packages/server/src/terminal/terminal.test.ts
+  h_0ae9538d78aa59 17,353-372
+packages/server/src/terminal/terminal.ts
+  h_0ae9538d78aa59 937-939
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "3134732203d6e98f13a6a68d065a2cb7424b406e",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}

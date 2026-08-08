@@ -1,0 +1,16 @@
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 1487-1491,1493
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 468
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "ad147fc56c8c6bf39abbfbdfdea6d2eb5fa8defa",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}

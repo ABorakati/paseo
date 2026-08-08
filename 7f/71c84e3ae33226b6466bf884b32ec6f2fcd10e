@@ -1,0 +1,36 @@
+packages/app/src/components/ui/radio.tsx
+  h_0ae9538d78aa59 1-65
+packages/app/src/i18n/resources/ar.ts
+  h_0ae9538d78aa59 2132
+packages/app/src/i18n/resources/en.ts
+  h_0ae9538d78aa59 2143
+packages/app/src/i18n/resources/es.ts
+  h_0ae9538d78aa59 2182
+packages/app/src/i18n/resources/fr.ts
+  h_0ae9538d78aa59 2186
+packages/app/src/i18n/resources/ja.ts
+  h_0ae9538d78aa59 2151
+packages/app/src/i18n/resources/ko.ts
+  h_0ae9538d78aa59 2144
+packages/app/src/i18n/resources/pt-BR.ts
+  h_0ae9538d78aa59 2166
+packages/app/src/i18n/resources/ru.ts
+  h_0ae9538d78aa59 2171
+packages/app/src/i18n/resources/zh-CN.ts
+  h_0ae9538d78aa59 2110
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 37,1498-1516,1520-1522,1538,1543-1544,1574-1578,1650,1653-1658,1696-1700,2173-2175,2177
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 25,62-63,68-69,73-78,503-520
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "7f71c84e3ae33226b6466bf884b32ec6f2fcd10e",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
