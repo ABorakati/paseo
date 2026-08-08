@@ -1,0 +1,24 @@
+packages/app/e2e/support/helpers/seed-client.ts
+  s_8d0e6580899123::t_e4e956a4adb506 140-142
+packages/app/e2e/support/helpers/chat-outline.ts
+  s_8d0e6580899123::t_e4e956a4adb506 2,71-75,78-80
+packages/app/e2e/browser/chat-outline.spec.ts
+  s_8d0e6580899123::t_e4e956a4adb506 81,86,105,108,127
+  s_8d0e6580899123::t_d4f4cf6d461002 87-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "0ba4a43e1650911e07076dbf89502a21705e3dee",
+  "prompts": {},
+  "sessions": {
+    "s_8d0e6580899123": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fe286-cb56-7d03-beac-c4050958e913",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
