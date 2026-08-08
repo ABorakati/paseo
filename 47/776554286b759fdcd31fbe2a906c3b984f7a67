@@ -1,0 +1,38 @@
+packages/app/src/i18n/resources/ar.ts
+  h_0ae9538d78aa59 2124-2126
+packages/app/src/i18n/resources/en.ts
+  h_0ae9538d78aa59 2135-2137
+packages/app/src/i18n/resources/es.ts
+  h_0ae9538d78aa59 2174-2176
+packages/app/src/i18n/resources/fr.ts
+  h_0ae9538d78aa59 2178-2180
+packages/app/src/i18n/resources/ja.ts
+  h_0ae9538d78aa59 2143-2145
+packages/app/src/i18n/resources/ko.ts
+  h_0ae9538d78aa59 2136-2138
+packages/app/src/i18n/resources/pt-BR.ts
+  h_0ae9538d78aa59 2158-2160
+packages/app/src/i18n/resources/ru.ts
+  h_0ae9538d78aa59 2163-2165
+packages/app/src/i18n/resources/zh-CN.ts
+  h_0ae9538d78aa59 2102-2104
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 1498-1562,1567-1572,1587,1610-1611,1732,1734,1737,1921-1922,1926,1997-2003,2011,2096-2105
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 41,121-123,299-301,381-415
+packages/protocol/src/messages.ts
+  h_0ae9538d78aa59 5211-5213
+packages/server/src/terminal/terminal-session-controller.ts
+  h_0ae9538d78aa59 38,636-641,650
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "47776554286b759fdcd31fbe2a906c3b984f7a67",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
