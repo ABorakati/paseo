@@ -1,0 +1,22 @@
+packages/app/e2e/support/helpers/chat-outline.ts
+  s_8d0e6580899123::t_e520e33dcbe59f 71-73
+packages/app/src/agent-stream/chat-outline/rail.web.tsx
+  s_8d0e6580899123::t_e520e33dcbe59f 7,23,97,121,135,144-147,189-195
+  s_8d0e6580899123::t_e5fa1ad5c9f32e 270-274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "12bdcc4dce6f1e8186af6efe0f54938f4e0e9292",
+  "prompts": {},
+  "sessions": {
+    "s_8d0e6580899123": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fe286-cb56-7d03-beac-c4050958e913",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
