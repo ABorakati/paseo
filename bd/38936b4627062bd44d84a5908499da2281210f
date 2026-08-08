@@ -1,0 +1,16 @@
+packages/app/src/components/ui/menu/menu-anchor.test.ts
+  h_0ae9538d78aa59 51-53,55-80
+packages/app/src/components/ui/menu/menu-anchor.ts
+  h_0ae9538d78aa59 41-49,54,57,60-61,63,66,69-74,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "bd38936b4627062bd44d84a5908499da2281210f",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
