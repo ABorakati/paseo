@@ -1,0 +1,34 @@
+packages/app/src/i18n/resources/ar.ts
+  h_0ae9538d78aa59 2129
+packages/app/src/i18n/resources/en.ts
+  h_0ae9538d78aa59 2140
+packages/app/src/i18n/resources/es.ts
+  h_0ae9538d78aa59 2179
+packages/app/src/i18n/resources/fr.ts
+  h_0ae9538d78aa59 2183
+packages/app/src/i18n/resources/ja.ts
+  h_0ae9538d78aa59 2148
+packages/app/src/i18n/resources/ko.ts
+  h_0ae9538d78aa59 2141
+packages/app/src/i18n/resources/pt-BR.ts
+  h_0ae9538d78aa59 2163
+packages/app/src/i18n/resources/ru.ts
+  h_0ae9538d78aa59 2168
+packages/app/src/i18n/resources/zh-CN.ts
+  h_0ae9538d78aa59 2107
+packages/app/src/screens/settings/host-page.tsx
+  h_0ae9538d78aa59 10,44,96,121,1521,1560-1565,1605,1670-1747,2165-2172
+packages/app/src/screens/settings/terminal-profiles-section.test.tsx
+  h_0ae9538d78aa59 42,104,266-268,347,422-446
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "c476a8a056ec25d38dfb176a789dbb0a2149e1e2",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
