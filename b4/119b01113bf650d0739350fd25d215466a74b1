@@ -1,0 +1,72 @@
+packages/app/src/utils/desktop-window.tsx
+  s_d9803f1943a62d::t_6f3e98a069c523 91-100,103-106,108-109
+  s_d9803f1943a62d::t_1a577fc7727540 101-102,107
+  s_d9803f1943a62d::t_2c67bad96eaa94 54-58
+  s_d9803f1943a62d::t_a452915accff7a 15
+packages/desktop/scripts/verify-electron-cdp.mjs
+  s_460f9ec6d37a19::t_14aa67e0aad82a 65,379-381
+packages/app/src/components/headers/screen-header.tsx
+  s_d9803f1943a62d::t_40c5747c5d6d6e 54,58,63
+  s_460f9ec6d37a19::t_373350627ebb4c 77-79
+  s_d9803f1943a62d::t_bb2a25e5d6e66d 74-76
+  s_d9803f1943a62d::t_c24bb9e5b87b71 13
+packages/desktop/src/window/window-manager.ts
+  s_d9803f1943a62d::t_5a9f95fd672a15 172-178
+packages/app/src/utils/desktop-window.test.ts
+  s_d9803f1943a62d::t_a39b97c8884819 5
+  s_d9803f1943a62d::t_bd87b5336205d4 42-43,45-48
+  s_460f9ec6d37a19::t_d316b4b5ef991f 25
+  s_d9803f1943a62d::t_76de3ca9613ca0 28-41,44
+  s_d9803f1943a62d::t_cec45d8d8bc7b8 26-27
+packages/app/src/components/desktop/window-chrome-header-row.tsx
+  s_d9803f1943a62d::t_90a6d1714b5e33 1-69
+packages/app/src/constants/layout.ts
+  s_d9803f1943a62d::t_dcfdf00b56b9e3 35-38
+  s_d9803f1943a62d::t_ef000f0357109e 6-7
+  s_460f9ec6d37a19::t_d316b4b5ef991f 39
+  s_d9803f1943a62d::t_b7fe447f38f575 8-11
+packages/app/src/components/explorer-sidebar.tsx
+  s_d9803f1943a62d::t_09e04fd85cf34b 347,350
+  s_460f9ec6d37a19::t_2e555c622f6804 575-577
+  s_d9803f1943a62d::t_5c2295ad64f36a 572-574
+  s_d9803f1943a62d::t_8e64c2686d152a 39
+  s_460f9ec6d37a19::t_09c79a77e742c8 390-399,406
+  s_d9803f1943a62d::t_0e7c39f232927e 408
+  s_460f9ec6d37a19::t_14aa67e0aad82a 29-34,302-315,317-320
+  s_460f9ec6d37a19::t_104cb65078574b 13,400-405
+  s_460f9ec6d37a19::t_bb37170164f7f3 578
+  s_460f9ec6d37a19::t_905bce76b0b459 316
+packages/app/src/app/_layout.tsx
+  s_460f9ec6d37a19::t_66a42725040c87 682-683
+  s_460f9ec6d37a19::t_14aa67e0aad82a 694
+packages/app/src/components/split-container.tsx
+  s_d9803f1943a62d::t_340559445ca6d6 44
+  s_d9803f1943a62d::t_867bb622a33ee6 1042
+  s_d9803f1943a62d::t_5368671af3158a 1175-1177
+  s_d9803f1943a62d::t_568bfc344f91f7 1077
+  s_460f9ec6d37a19::t_373350627ebb4c 1178-1180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "b4119b01113bf650d0739350fd25d215466a74b1",
+  "prompts": {},
+  "sessions": {
+    "s_460f9ec6d37a19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fe720-1ec5-75d2-a8ee-a3a63b4ff81f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    },
+    "s_d9803f1943a62d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7aed43ef-d0f7-4cf4-b797-abe4bc6c672b",
+        "model": "claude-opus-5"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
