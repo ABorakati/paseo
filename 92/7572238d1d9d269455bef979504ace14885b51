@@ -1,0 +1,23 @@
+packages/app/src/components/desktop/window-chrome-header-row.tsx
+  s_09c16c08d6753b::t_e69350cc171084 4-8
+  s_09c16c08d6753b::t_e13387eaf942bf 77,84-89
+  s_09c16c08d6753b::t_aa908a5056be90 157-163
+  s_09c16c08d6753b::t_c0b2f6f9b66d12 90
+  s_09c16c08d6753b::t_9fca4120ea5fbb 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "927572238d1d9d269455bef979504ace14885b51",
+  "prompts": {},
+  "sessions": {
+    "s_09c16c08d6753b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a8528a14-1cf1-4e5d-bf3e-3a67c3d6414c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
