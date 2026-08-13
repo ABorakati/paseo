@@ -1,0 +1,21 @@
+packages/app/src/components/desktop/window-chrome-header-row.tsx
+  s_09c16c08d6753b::t_a40fd2bd3aa225 20-28,51,57-61,67-73,75-80,102-124,133
+packages/app/src/utils/desktop-window.tsx
+  s_09c16c08d6753b::t_e0986feea2deda 239,264-275,277-278,280-282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9687b384525ed7c24434123baaad8a72b0597caa",
+  "prompts": {},
+  "sessions": {
+    "s_09c16c08d6753b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a8528a14-1cf1-4e5d-bf3e-3a67c3d6414c",
+        "model": "unknown"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
