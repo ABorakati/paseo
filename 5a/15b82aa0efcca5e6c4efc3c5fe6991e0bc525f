@@ -1,0 +1,41 @@
+packages/app/src/utils/desktop-window.tsx
+  h_0ae9538d78aa59 13-14,84,87-93,95-96,99-102,104-105,127,203,205
+packages/app/src/utils/window-controls-overlay.test.ts
+  h_0ae9538d78aa59 1-138
+docs/window-chrome.md
+  h_0ae9538d78aa59 1-47,50-59
+  h_0ae9538d78aa59 48-49
+packages/app/src/components/headers/screen-header.tsx
+  h_0ae9538d78aa59 82-87
+docs/qa.md
+  h_0ae9538d78aa59 77
+packages/app/src/constants/layout.ts
+  h_0ae9538d78aa59 30-36,38
+packages/app/src/utils/window-controls-overlay.ts
+  h_0ae9538d78aa59 1-69
+packages/app/src/utils/desktop-window.test.ts
+  h_0ae9538d78aa59 12-17,20-25,31-36,39-127
+packages/app/src/hooks/use-window-controls-overlay.web.ts
+  h_0ae9538d78aa59 1-113
+docs/design.md
+  h_0ae9538d78aa59 156
+packages/desktop/scripts/verify-electron-cdp.mjs
+  h_0ae9538d78aa59 56-86,138-141,190-193,468-470,614,645-726,848-857
+packages/app/src/screens/workspace/workspace-screen.tsx
+  h_0ae9538d78aa59 1337-1342
+CLAUDE.md
+  h_0ae9538d78aa59 38
+packages/app/src/hooks/use-window-controls-overlay.ts
+  h_0ae9538d78aa59 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5a15b82aa0efcca5e6c4efc3c5fe6991e0bc525f",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
