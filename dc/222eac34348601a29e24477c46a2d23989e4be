@@ -1,0 +1,38 @@
+CLAUDE.md
+  h_0ae9538d78aa59 38
+packages/desktop/scripts/verify-electron-cdp.mjs
+  h_0ae9538d78aa59 56-86,138-141,190-193,468-470,614,645-726,848-857
+docs/design.md
+  h_0ae9538d78aa59 156
+packages/app/src/utils/desktop-window.test.ts
+  h_0ae9538d78aa59 12-17,20-25,31-36,39-127
+packages/app/src/screens/workspace/workspace-screen.tsx
+  h_0ae9538d78aa59 1337-1342
+packages/app/src/utils/desktop-window.tsx
+  h_0ae9538d78aa59 13-14,84,87-93,95-96,99-102,104-105,127,203,205
+packages/app/src/hooks/use-window-controls-overlay.web.ts
+  h_0ae9538d78aa59 1-113
+packages/app/src/hooks/use-window-controls-overlay.ts
+  h_0ae9538d78aa59 1-5
+packages/app/src/utils/window-controls-overlay.ts
+  h_0ae9538d78aa59 1-69
+docs/qa.md
+  h_0ae9538d78aa59 77
+docs/window-chrome.md
+  h_0ae9538d78aa59 1-36
+packages/app/src/utils/window-controls-overlay.test.ts
+  h_0ae9538d78aa59 1-138
+packages/app/src/constants/layout.ts
+  h_0ae9538d78aa59 30-36,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "dc222eac34348601a29e24477c46a2d23989e4be",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
