@@ -1,0 +1,22 @@
+packages/app/src/components/split-container.tsx
+  h_0ae9538d78aa59 1236-1239
+packages/app/src/screens/workspace/workspace-desktop-tabs-row.tsx
+  h_0ae9538d78aa59 106,543-555,692-697,1179,1713
+packages/app/src/screens/workspace/workspace-screen.tsx
+  h_0ae9538d78aa59 3510
+packages/desktop/src/preload.ts
+  h_0ae9538d78aa59 224-237,239-259,261
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 457-459,487-494,515,528,536-541,546-558,570,578-585
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "e3923f1ad178ce55ae8f00f590657f7862cd41c7",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
