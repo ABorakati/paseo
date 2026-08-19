@@ -1,0 +1,16 @@
+packages/desktop/src/window/window-manager.test.ts
+  h_0ae9538d78aa59 5,184-203
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 463-477,505,509-510
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d747495b9639726606ed16e61e4b3d0b4937cace",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
