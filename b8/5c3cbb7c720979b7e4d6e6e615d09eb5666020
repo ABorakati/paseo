@@ -1,0 +1,20 @@
+packages/app/src/components/desktop/window-controls.tsx
+  h_0ae9538d78aa59 3,11,14,17,30,38,46-54,81-88,111,116,120-127
+packages/app/src/desktop/electron/window.ts
+  h_0ae9538d78aa59 59-66
+packages/app/src/utils/window-controls-mode.test.ts
+  h_0ae9538d78aa59 1-31
+packages/app/src/utils/window-controls-mode.ts
+  h_0ae9538d78aa59 1-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b85c3cbb7c720979b7e4d6e6e615d09eb5666020",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
