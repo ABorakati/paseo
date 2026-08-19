@@ -1,0 +1,18 @@
+packages/app/src/components/desktop/window-controls.tsx
+  h_0ae9538d78aa59 149-159,197
+packages/desktop/e2e/window-controls.spec.ts
+  h_0ae9538d78aa59 9-15,17,21-23,26,30-31,42,45-48,51-52,66-67,69,71,80-82
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 454-462,465-479,481-487,494,503,506-507,512-517
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3f221417b75c5929eea84ecb0a798f147a4df823",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
