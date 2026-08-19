@@ -1,0 +1,14 @@
+packages/app/src/components/explorer-sidebar.tsx
+  h_0ae9538d78aa59 29,391-412
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "243674bc672f01b50f3fb91a598465bc5a3bda22",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}

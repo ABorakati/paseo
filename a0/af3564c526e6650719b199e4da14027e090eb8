@@ -1,0 +1,14 @@
+packages/app/src/screens/workspace/workspace-screen.tsx
+  h_0ae9538d78aa59 1336-1348,1351,1359-1360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "a0af3564c526e6650719b199e4da14027e090eb8",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
