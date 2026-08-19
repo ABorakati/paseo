@@ -1,0 +1,192 @@
+.oxlintrc.json
+  h_0ae9538d78aa59 210
+CHANGELOG.md
+  h_0ae9538d78aa59 3-15
+docker/base/Dockerfile
+  h_0ae9538d78aa59 26
+docs/plugins.md
+  h_0ae9538d78aa59 56,99-100,104-107,116,181
+docs/release.md
+  h_0ae9538d78aa59 123
+nix/npm-deps.hash
+  h_0ae9538d78aa59 1
+package-lock.json
+  h_0ae9538d78aa59 3,9,6250-6253,36143,36157,37195,37198-37200,37447,37449-37450,37461,37704,38600,38628-38629,38634,38643,38650,38663,38881,38887-38891,39943
+package.json
+  h_0ae9538d78aa59 3,50-51,105-109
+packages/app/e2e/browser/direct-terminal-shortcut-pane-placement.spec.ts
+  h_0ae9538d78aa59 1-33
+packages/app/e2e/browser/explorer-surface-upgrade.spec.ts
+  h_0ae9538d78aa59 1-130
+packages/app/e2e/browser/plugin-workspace-panels.spec.ts
+  h_0ae9538d78aa59 34
+packages/app/package.json
+  h_0ae9538d78aa59 3,52
+packages/app/src/agent-stream/view.tsx
+  h_0ae9538d78aa59 29-30,447,449-458
+packages/app/src/app/_layout.tsx
+  h_0ae9538d78aa59 485-494
+packages/app/src/command-center/workspace-file-search.ts
+  h_0ae9538d78aa59 135
+packages/app/src/components/compact-explorer-sidebar-host.tsx
+  h_0ae9538d78aa59 6,9,49,100,102-104,111-114,116,127,131
+packages/app/src/components/compact-explorer-sidebar.tsx
+  h_0ae9538d78aa59 1-2,8-12,24,32,73,194,264,282
+packages/app/src/components/desktop-sidebar-layout.test.ts
+  h_0ae9538d78aa59 81-82,91,93-94,97
+packages/app/src/components/desktop-sidebar-layout.ts
+  h_0ae9538d78aa59 2,4,65-66
+packages/app/src/components/ui/text-input/text-input.native.test.tsx
+  h_0ae9538d78aa59 1-62
+packages/app/src/components/ui/text-input/text-input.tsx
+  h_0ae9538d78aa59 14-16,44-55
+packages/app/src/composer/draft/workspace-tab.tsx
+  h_0ae9538d78aa59 51-55,454,456-458,461
+packages/app/src/git/diff-pane.tsx
+  h_0ae9538d78aa59 1022-1024,1045,1050,1065,1068
+packages/app/src/keyboard/keyboard-action-dispatcher.ts
+  h_0ae9538d78aa59 38,80
+packages/app/src/panels/agent-panel.tsx
+  h_0ae9538d78aa59 93,1595,1597-1599,1602
+packages/app/src/panels/terminal-panel.tsx
+  h_0ae9538d78aa59 87,92-93
+packages/app/src/plugins/attachments/model.ts
+  h_0ae9538d78aa59 3
+packages/app/src/plugins/attachments/picker.tsx
+  h_0ae9538d78aa59 5-6
+packages/app/src/plugins/client-state/snapshots.ts
+  h_0ae9538d78aa59 1
+packages/app/src/plugins/client-state/source.ts
+  h_0ae9538d78aa59 1
+packages/app/src/plugins/command-center/contributions.test.ts
+  h_0ae9538d78aa59 9
+packages/app/src/plugins/command-center/contributions.ts
+  h_0ae9538d78aa59 1-3
+packages/app/src/plugins/evaluate.test.ts
+  h_0ae9538d78aa59 165,169
+packages/app/src/plugins/evaluate.ts
+  h_0ae9538d78aa59 20-21,152,162
+packages/app/src/plugins/runtime-boundary.tsx
+  h_0ae9538d78aa59 2
+packages/app/src/plugins/surface-runtime.test.tsx
+  h_0ae9538d78aa59 3-4
+packages/app/src/plugins/surface-screen.tsx
+  h_0ae9538d78aa59 2
+packages/app/src/plugins/theme.ts
+  h_0ae9538d78aa59 1
+packages/app/src/plugins/types.ts
+  h_0ae9538d78aa59 8
+packages/app/src/plugins/workspace-panels/panel.tsx
+  h_0ae9538d78aa59 6-7
+packages/app/src/plugins/workspace-panels/resolution.ts
+  h_0ae9538d78aa59 1
+packages/app/src/screens/workspace/workspace-file-open-command.ts
+  h_0ae9538d78aa59 11-14,27
+packages/app/src/screens/workspace/workspace-screen.tsx
+  h_0ae9538d78aa59 47-55,1336-1339,1361,1370-1374,1376,1383,1385,1487-1489,1493-1495,1542,1636-1639,1647-1650,1655-1656,1660,1702,1704,1707,1823,1837-1839,1841-1843,1845-1848,1850-1855,1885-1886,1893-1894,1936,1941,1984-1988,2045,2075-2076,2085-2086,2099-2102,2106-2111,2117,2253-2263,2265,2625-2626,2824-2828,2831-2843,2846,2990,3535-3540
+packages/app/src/stores/navigation-active-workspace-store/navigation.test.ts
+  h_0ae9538d78aa59 4,180-194
+packages/app/src/stores/panel-store/index.ts
+  h_0ae9538d78aa59 25,53,92-93,219-220,222-223,284,286
+packages/app/src/stores/panel-store/state.test.ts
+  h_0ae9538d78aa59 13,102,108,114,120,122-123,128,134,165,169,172,175,182,191,199,204-206,209,220,227-229,232
+packages/app/src/stores/panel-store/state.ts
+  h_0ae9538d78aa59 59,62-67,93,99,102-103,107,111,113-114,116,125-128,148,205,209-214
+packages/app/src/stores/workspace-layout-actions.ts
+  h_0ae9538d78aa59 216,1870,1878,1908-1918,2007
+packages/app/src/stores/workspace-layout-store.test.ts
+  h_0ae9538d78aa59 588-616,633-702
+packages/app/src/stores/workspace-layout-store.ts
+  h_0ae9538d78aa59 89,96-100,155,468-478,518-528
+packages/app/src/stores/workspace-subagents-integration.test.ts
+  h_0ae9538d78aa59 111
+packages/app/src/utils/desktop-sidebar-toggle.test.ts
+  h_0ae9538d78aa59 5-17,19-34,37-49
+packages/app/src/utils/desktop-sidebar-toggle.ts
+  h_0ae9538d78aa59 3,6,9-14,16,18-27
+packages/app/src/workspace-tabs/agent-visibility.test.ts
+  h_0ae9538d78aa59 336,347
+packages/app/src/workspace-tabs/agent-visibility.ts
+  h_0ae9538d78aa59 67,78
+packages/app/src/workspace-tabs/explorer-surface.test.ts
+  h_0ae9538d78aa59 1-167
+packages/app/src/workspace-tabs/explorer-surface.ts
+  h_0ae9538d78aa59 1-241
+packages/cli/package.json
+  h_0ae9538d78aa59 3,31-33
+packages/cli/src/commands/plugin/scaffold.test.ts
+  h_0ae9538d78aa59 53,65,86,114
+packages/cli/src/commands/plugin/scaffold.ts
+  h_0ae9538d78aa59 5,59,67,79,245,254
+packages/client/package.json
+  h_0ae9538d78aa59 3,42-43
+packages/desktop/package.json
+  h_0ae9538d78aa59 3
+packages/desktop/src/features/editor-targets/registry.test.ts
+  h_0ae9538d78aa59 236-270
+packages/desktop/src/features/editor-targets/registry.ts
+  h_0ae9538d78aa59 7,39
+packages/desktop/src/features/editor-targets/targets/android-studio.ts
+  h_0ae9538d78aa59 1-41
+packages/expo-two-way-audio/package.json
+  h_0ae9538d78aa59 3
+packages/highlight/package.json
+  h_0ae9538d78aa59 3
+packages/plugin/package.json
+  h_0ae9538d78aa59 2-4,27-29,42,51
+packages/plugin/src/server.test.ts
+  h_0ae9538d78aa59 52
+packages/protocol/package.json
+  h_0ae9538d78aa59 3
+packages/relay/package.json
+  h_0ae9538d78aa59 3
+packages/server/package.json
+  h_0ae9538d78aa59 3,75-79
+packages/server/src/server/plugins/compiler.test.ts
+  h_0ae9538d78aa59 76-87,101,103-109
+packages/server/src/server/plugins/compiler.ts
+  h_0ae9538d78aa59 7,311,318
+packages/server/src/server/plugins/plugin-paseo-api.e2e.test.ts
+  h_0ae9538d78aa59 24
+packages/server/src/server/plugins/plugin-process.ts
+  h_0ae9538d78aa59 8,12,68
+packages/server/src/server/plugins/plugin-sdk-specifiers.ts
+  h_0ae9538d78aa59 1-17
+packages/server/src/server/plugins/runtime.posix.test.ts
+  h_0ae9538d78aa59 504,563-590,602,628,674,714,726,759
+packages/website/package.json
+  h_0ae9538d78aa59 3
+patches/@mattermost+react-native-paste-input+2.0.1.patch
+  h_0ae9538d78aa59 30-395
+plugin-examples/linear/index.ts
+  h_0ae9538d78aa59 1
+plugin-examples/linear/issues.server.ts
+  h_0ae9538d78aa59 1
+plugin-examples/linear/issues.shared.ts
+  h_0ae9538d78aa59 1
+plugin-examples/local-plugin/increment.shared.ts
+  h_0ae9538d78aa59 1
+plugin-examples/local-plugin/index.ts
+  h_0ae9538d78aa59 1
+plugin-examples/local-plugin/main.client.tsx
+  h_0ae9538d78aa59 2
+public-docs/plugins/index.md
+  h_0ae9538d78aa59 15-17,49,86
+public-docs/plugins/reference.md
+  h_0ae9538d78aa59 44,63-66,75,93,122,165,174,205,284,339,380,393,417,477,522
+scripts/postinstall-patches.mjs
+  h_0ae9538d78aa59 23-26
+skills/paseo-plugin/SKILL.md
+  h_0ae9538d78aa59 53,70,126,175,177-180,191,224-226,278-279
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c3f8c0bf6c35bdb1f21dcb31358fc39ec08e7214",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
