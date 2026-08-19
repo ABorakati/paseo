@@ -1,0 +1,32 @@
+AGENTS.md
+  h_0ae9538d78aa59 1
+CLAUDE.md
+  h_0ae9538d78aa59 38
+docs/design.md
+  h_0ae9538d78aa59 156
+docs/window-chrome.md
+  h_0ae9538d78aa59 3,5,7,9,11,13,15,17,19,21,23,25,27-29,31,33,35,37,39,41,43,45-47,51,57
+packages/app/src/app/_layout.tsx
+  h_0ae9538d78aa59 49,720-722
+packages/app/src/utils/desktop-window.test.ts
+  h_0ae9538d78aa59 12,15,18,22,24-25,28,30
+packages/app/src/utils/desktop-window.tsx
+  h_0ae9538d78aa59 76-80,87,89-90,188
+packages/desktop/scripts/verify-electron-cdp.mjs
+  h_0ae9538d78aa59 57-59,61,65,107-108,159,354-502,519,521-526,536-537,545-549,552-554,592-593,737-738,769-776,779-792,794-837,961-962,964-968
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 216-221,236,487-489,492-493,501-502,510-511
+packages/server/AGENTS.md
+  h_0ae9538d78aa59 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "26b452c0852c2a9d4cd47cc46d387af0a19c6713",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
