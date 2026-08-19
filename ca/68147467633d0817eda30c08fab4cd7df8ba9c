@@ -1,0 +1,16 @@
+packages/desktop/src/window/window-failure-recovery.test.ts
+  h_0ae9538d78aa59 1-221
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 496-505,541,545,591,597-600,602-604
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ca68147467633d0817eda30c08fab4cd7df8ba9c",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
