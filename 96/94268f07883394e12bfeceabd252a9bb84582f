@@ -1,0 +1,26 @@
+packages/app/src/components/desktop/window-controls.tsx
+  h_0ae9538d78aa59 1-168
+packages/app/src/components/explorer-sidebar.tsx
+  h_0ae9538d78aa59 29,41,323,415
+packages/app/src/components/headers/screen-header.tsx
+  h_0ae9538d78aa59 12,14,39,64-67
+packages/app/src/desktop/electron/window.ts
+  h_0ae9538d78aa59 27-50
+packages/app/src/desktop/host.ts
+  h_0ae9538d78aa59 107-109
+packages/desktop/src/preload.ts
+  h_0ae9538d78aa59 52-54,132-241
+packages/desktop/src/window/window-manager.ts
+  h_0ae9538d78aa59 89-92,227-238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9694268f07883394e12bfeceabd252a9bb84582f",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
