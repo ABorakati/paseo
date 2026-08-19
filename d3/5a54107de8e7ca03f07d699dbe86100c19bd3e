@@ -1,0 +1,16 @@
+packages/desktop/e2e/support/runtime.ts
+  h_0ae9538d78aa59 83-90,119-120,188-203,213-223,229,321-349
+packages/desktop/e2e/window-controls.spec.ts
+  h_0ae9538d78aa59 1-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d35a54107de8e7ca03f07d699dbe86100c19bd3e",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
