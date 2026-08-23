@@ -1,0 +1,28 @@
+.github/workflows/ci.yml
+  h_0ae9538d78aa59 358,362,367-370,414-424
+docs/testing.md
+  h_0ae9538d78aa59 192-194,202
+packages/app/e2e/browser/workspace-model-restart.spec.ts
+  h_0ae9538d78aa59 2,26,255
+packages/app/e2e/support/global-setup.ts
+  h_0ae9538d78aa59 2,153-155,202,206
+packages/app/e2e/support/helpers/e2e-worker.ts
+  h_0ae9538d78aa59 7-15,26,28,47-49,53-62,120,124-126
+packages/app/e2e/support/helpers/isolated-host-daemon.ts
+  h_0ae9538d78aa59 1,7,45,98-104,107,109,165,177,206,212
+packages/app/e2e/support/helpers/local-elixir-relay.ts
+  h_0ae9538d78aa59 73-78
+packages/app/e2e/support/helpers/spawn-node.ts
+  h_0ae9538d78aa59 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "9465da63f233988c6343298198a94b2ed366bd1d",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
