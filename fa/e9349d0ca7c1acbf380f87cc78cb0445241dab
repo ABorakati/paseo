@@ -39,7 +39,7 @@ packages/server/src/server/config.ts
 packages/server/src/server/persisted-config.ts
   h_0ae9538d78aa59 262-263
 packages/server/src/executable-resolution/executable-resolution.ts
-  h_0ae9538d78aa59 20-23,28-45,82-91,95,98,147,154-156,160,167,172
+  h_0ae9538d78aa59 20-23,28-45,46,82-91,95,98,147,154-156,160,167,172
   h_0ae9538d78aa59 46
 packages/server/src/server/session.ts
   h_0ae9538d78aa59 30,928-929
@@ -52,7 +52,7 @@ packages/desktop/scripts/dev.ps1
 packages/server/src/server/websocket-server.ts
   h_0ae9538d78aa59 1610-1611
 packages/server/src/terminal/terminal.test.ts
-  h_0ae9538d78aa59 5,8,10,30,248-296,299-302,304-311,314-339,341-349,352-415,417-424,426-436
+  h_0ae9538d78aa59 5,8,10,30,248-296,297-298,299-302,303,304-311,312-313,314-339,340,341-349,350-351,352-415,416,417-424,425,426-436,437
   h_0ae9538d78aa59 297-298,303,312-313,340,350-351,416,425,437
 packages/app/src/data/push-router.test.ts
   h_0ae9538d78aa59 46-47
