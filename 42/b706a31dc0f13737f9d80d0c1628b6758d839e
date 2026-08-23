@@ -25,7 +25,7 @@ packages/server/src/server/persisted-config.ts
 packages/app/src/screens/workspace/terminals/use-workspace-terminals.ts
   h_0ae9538d78aa59 144
 packages/server/src/terminal/terminal-shell.ts
-  h_0ae9538d78aa59 1-11,13-190,196-207
+  h_0ae9538d78aa59 1-11,12,13-190,191-195,196-207
   h_0ae9538d78aa59 12,191-195
 packages/protocol/src/messages.ts
   h_0ae9538d78aa59 163-166,184-185,2402,2416-2422,2680,2970-2973,5236-5246,5550,5987-5988
@@ -42,10 +42,10 @@ packages/server/src/terminal/terminal-manager.ts
 packages/client/src/daemon-client.ts
   h_0ae9538d78aa59 12,493,4939,4950,4975-4982
 packages/server/src/executable-resolution/executable-resolution.probe.test.ts
-  h_0ae9538d78aa59 183-207,212-213,222,224-225,227,229-230
+  h_0ae9538d78aa59 16,183-207,208-211,212-213,214-221,222,223,224-225,226,227,228,229-230
   h_0ae9538d78aa59 16,208-211,214-221,223,226,228
 packages/server/src/executable-resolution/executable-resolution.ts
-  h_0ae9538d78aa59 20-23,28-46,82-88,142-143,153,160,165
+  h_0ae9538d78aa59 20-23,28-46,82-88,140,142-143,153,160,165,172-190
   h_0ae9538d78aa59 140,172-190
 packages/app/src/screens/settings/host-page.tsx
   h_0ae9538d78aa59 33,1783-1785
