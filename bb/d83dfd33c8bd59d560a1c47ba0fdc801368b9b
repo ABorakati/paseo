@@ -1,0 +1,52 @@
+packages/app/e2e/browser/workspace-model-restart.spec.ts
+  s_90ff229135b873::t_80b6832c5b0923 2,26,255
+docs/testing.md
+  s_242bb9cdf47ef1::t_750e50938bbf4a 192-194,202
+packages/app/e2e/support/helpers/local-elixir-relay.ts
+  s_242bb9cdf47ef1::t_750e50938bbf4a 73-75
+  s_242bb9cdf47ef1::t_e96a8447ba81e4 76-78
+packages/app/e2e/support/helpers/spawn-node.ts
+  s_2905f044dc001b::t_e6baf56b211e83 1-51
+packages/app/e2e/support/helpers/isolated-host-daemon.ts
+  s_90ff229135b873::t_3d6bc4c73eb304 45
+  s_90ff229135b873::t_80b6832c5b0923 7,98-104,107,109,165,177,206,212
+packages/app/e2e/support/helpers/e2e-worker.ts
+  s_2905f044dc001b::t_3b13e71f35360b 52-61,119
+  s_2905f044dc001b::t_a1974c1f17098a 2,8-14,25,27,46-48,123-124
+  s_2905f044dc001b::t_b783fe818af5af 125
+.github/workflows/ci.yml
+  s_242bb9cdf47ef1::t_750e50938bbf4a 358,362,367-370,414-422
+  s_242bb9cdf47ef1::t_00ca090d315bb8 423-424
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "bbd83dfd33c8bd59d560a1c47ba0fdc801368b9b",
+  "prompts": {},
+  "sessions": {
+    "s_242bb9cdf47ef1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a02e71-4ca3-7151-a620-6015fb32aca2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    },
+    "s_2905f044dc001b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a02f81-0cd9-7202-a826-f02977e67088",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    },
+    "s_90ff229135b873": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a02e70-26f9-7470-a124-0be74c3db5dc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
