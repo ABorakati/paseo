@@ -1,0 +1,29 @@
+packages/app/e2e/support/helpers/spawn-node.ts
+  s_fafd8294772f28::t_b36acf82417491 1-84
+packages/app/e2e/support/helpers/local-elixir-relay.ts
+  s_fafd8294772f28::t_84eb59fc4953a2 60-65
+packages/app/e2e/browser/workspace-model-restart.spec.ts
+  s_fafd8294772f28::t_f3a9074b1273b7 2,25,239
+packages/app/e2e/support/global-setup.ts
+  s_fafd8294772f28::t_99c5b2b68b81be 2,153-155,202,206
+packages/app/e2e/support/helpers/e2e-worker.ts
+  s_fafd8294772f28::t_39b3a7c468533d 22-31,52-54,120-122
+packages/app/e2e/support/helpers/isolated-host-daemon.ts
+  s_fafd8294772f28::t_539dfae3bcb738 1,7,45,49-52,101-106,108,110,120-122,169,181,210,216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "459ff33a2ae9c253c95dc5dfc6dbf7eff2ffe40b",
+  "prompts": {},
+  "sessions": {
+    "s_fafd8294772f28": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a02f9a-865b-72a0-b0c8-a2b10f4e7b47",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
