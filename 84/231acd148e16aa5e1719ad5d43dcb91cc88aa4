@@ -1,0 +1,28 @@
+docs/testing.md
+  h_0ae9538d78aa59 192-194
+packages/app/e2e/browser/workspace-model-restart.spec.ts
+  h_0ae9538d78aa59 2,25,239,263,272
+packages/app/e2e/support/global-setup.ts
+  h_0ae9538d78aa59 2,153-155,202,206
+packages/app/e2e/support/helpers/daemon-update.ts
+  h_0ae9538d78aa59 3,58,61
+packages/app/e2e/support/helpers/e2e-worker.ts
+  h_0ae9538d78aa59 1,22-31,52-54,120-122
+packages/app/e2e/support/helpers/isolated-host-daemon.ts
+  h_0ae9538d78aa59 1,7,45,49-52,101-106,108,110,120-122,169,181,210,216
+packages/app/e2e/support/helpers/local-elixir-relay.ts
+  h_0ae9538d78aa59 5,38,40,60-65,103,110
+packages/app/e2e/support/helpers/spawn-node.ts
+  h_0ae9538d78aa59 1-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "84231acd148e16aa5e1719ad5d43dcb91cc88aa4",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
