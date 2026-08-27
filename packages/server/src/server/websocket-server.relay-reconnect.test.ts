@@ -10,7 +10,10 @@ import type { LoopService } from "./loop-service.js";
 import type { ScheduleService } from "./schedule/service.js";
 import type { CheckoutDiffManager } from "./checkout-diff-manager.js";
 import { asInternals, createStub } from "./test-utils/class-mocks.js";
-import { createProviderSnapshotManagerStub } from "./test-utils/session-stubs.js";
+import {
+  createProviderSnapshotManagerStub,
+  createEmptyUsageLimitsService,
+} from "./test-utils/session-stubs.js";
 import {
   asUint8Array,
   decodeTerminalStreamFrame,
@@ -259,6 +262,7 @@ function createServer(options?: { speechReadiness?: SpeechReadinessSnapshot | nu
     undefined,
     undefined,
     createProviderSnapshotManagerStub().manager,
+    createEmptyUsageLimitsService(),
   );
 }
 
