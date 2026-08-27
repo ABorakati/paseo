@@ -53,6 +53,12 @@ import {
   LoopStopResponseSchema,
 } from "@getpaseo/protocol/loop/rpc-schemas";
 import {
+  UsageLimitsGetSnapshotRequestSchema,
+  UsageLimitsGetSnapshotResponseSchema,
+  UsageLimitsRefreshRequestSchema,
+  UsageLimitsRefreshResponseSchema,
+} from "@getpaseo/protocol/usage-limits/rpc-schemas";
+import {
   PaseoConfigRawSchema,
   PaseoLifecycleCommandRawSchema,
   PaseoMetadataGenerationEntrySchema,
@@ -1906,6 +1912,8 @@ export const SessionInboundMessageSchema = z.discriminatedUnion("type", [
   CheckoutPullRequestSchema,
   CheckoutPushRequestSchema,
   CheckoutRefreshRequestSchema,
+  UsageLimitsGetSnapshotRequestSchema,
+  UsageLimitsRefreshRequestSchema,
   CheckoutPrCreateRequestSchema,
   CheckoutPrMergeRequestSchema,
   CheckoutGithubSetAutoMergeRequestSchema,
@@ -2142,6 +2150,8 @@ export const ServerInfoStatusPayloadSchema = z
         rewind: z.boolean().optional(),
         // COMPAT(checkoutRefresh): added in v0.1.86, remove gate after 2026-11-29.
         checkoutRefresh: z.boolean().optional(),
+        // COMPAT(usageLimits): added in v0.1.88, remove gate after 2027-02-27.
+        usageLimits: z.boolean().optional(),
       })
       .optional(),
   })
@@ -3720,6 +3730,8 @@ export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
   CheckoutPullResponseSchema,
   CheckoutPushResponseSchema,
   CheckoutRefreshResponseSchema,
+  UsageLimitsGetSnapshotResponseSchema,
+  UsageLimitsRefreshResponseSchema,
   CheckoutPrCreateResponseSchema,
   CheckoutPrMergeResponseSchema,
   CheckoutGithubSetAutoMergeResponseSchema,
@@ -3984,6 +3996,10 @@ export type CheckoutPushRequest = z.infer<typeof CheckoutPushRequestSchema>;
 export type CheckoutPushResponse = z.infer<typeof CheckoutPushResponseSchema>;
 export type CheckoutRefreshRequest = z.infer<typeof CheckoutRefreshRequestSchema>;
 export type CheckoutRefreshResponse = z.infer<typeof CheckoutRefreshResponseSchema>;
+export type UsageLimitsGetSnapshotRequest = z.infer<typeof UsageLimitsGetSnapshotRequestSchema>;
+export type UsageLimitsGetSnapshotResponse = z.infer<typeof UsageLimitsGetSnapshotResponseSchema>;
+export type UsageLimitsRefreshRequest = z.infer<typeof UsageLimitsRefreshRequestSchema>;
+export type UsageLimitsRefreshResponse = z.infer<typeof UsageLimitsRefreshResponseSchema>;
 export type CheckoutPrCreateRequest = z.infer<typeof CheckoutPrCreateRequestSchema>;
 export type CheckoutPrCreateResponse = z.infer<typeof CheckoutPrCreateResponseSchema>;
 export type CheckoutPrMergeRequest = z.infer<typeof CheckoutPrMergeRequestSchema>;

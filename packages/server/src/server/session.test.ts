@@ -39,6 +39,7 @@ import {
   asWorkspaceGitService,
   asDaemonConfigStore,
   createProviderSnapshotManagerStub,
+  createEmptyUsageLimitsService,
 } from "./test-utils/session-stubs.js";
 import { isPlatform } from "../test-utils/platform.js";
 import type { GitHubPullRequestStatusFacts } from "../services/github-service.js";
@@ -311,6 +312,7 @@ function createSessionForTest(options: SessionForTestOptions = {}): Session {
     terminalManager: options.terminalManager ?? null,
     providerSnapshotManager:
       options.providerSnapshotManager ?? createProviderSnapshotManagerStub().manager,
+    usageLimitsService: createEmptyUsageLimitsService(),
     scriptRouteStore: options.scriptRouteStore,
     scriptRuntimeStore: options.scriptRuntimeStore,
     getDaemonTcpPort: options.getDaemonTcpPort,

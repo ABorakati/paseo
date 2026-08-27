@@ -7,6 +7,7 @@ import {
   migrateProviderSettings,
   ProviderOverridesSchema,
 } from "./agent/provider-launch-config.js";
+import { UsageLimitsConfigSchema } from "@getpaseo/protocol/usage-limits/types";
 import type { AgentProviderRuntimeSettingsMap } from "./agent/provider-launch-config.js";
 import { ensurePrivateFile, writePrivateFileSync } from "./private-files.js";
 
@@ -262,6 +263,7 @@ export const PersistedConfigSchema = z
       })
       .strict()
       .optional(),
+    usageLimits: UsageLimitsConfigSchema.optional(),
     features: z
       .object({
         dictation: FeatureDictationSchema.optional(),

@@ -378,6 +378,7 @@ export function buildHostNewWorkspaceRoute(
 export const SETTINGS_SECTION_SLUGS = [
   "general",
   "appearance",
+  "usage",
   "shortcuts",
   "integrations",
   "permissions",

@@ -28,6 +28,7 @@ import {
   Monitor,
   Settings,
   Palette,
+  Gauge,
   Server,
   Network,
   Workflow,
@@ -46,6 +47,7 @@ import { ScreenTitle } from "@/components/headers/screen-title";
 import { HeaderIconBadge } from "@/components/headers/header-icon-badge";
 import { SettingsSection } from "@/screens/settings/settings-section";
 import { AppearanceSection } from "@/screens/settings/appearance/appearance-section";
+import { UsageSection } from "@/screens/settings/usage-section";
 import {
   useAppSettings,
   useSettings,
@@ -133,6 +135,7 @@ interface SidebarSectionItem {
 const SIDEBAR_SECTION_ITEMS: SidebarSectionItem[] = [
   { id: "general", label: "General", icon: Settings },
   { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "usage", label: "Usage", icon: Gauge },
   { id: "shortcuts", label: "Shortcuts", icon: Keyboard, desktopOnly: true },
   { id: "integrations", label: "Integrations", icon: Puzzle, desktopOnly: true },
   { id: "permissions", label: "Permissions", icon: Shield, desktopOnly: true },
@@ -1332,6 +1335,8 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
           );
         case "appearance":
           return <AppearanceSection />;
+        case "usage":
+          return <UsageSection serverId={activeHostServerId} />;
         case "shortcuts":
           return isDesktopApp ? <KeyboardShortcutsSection /> : null;
         case "integrations":

@@ -11,7 +11,10 @@ import {
   type SessionOutboundMessage,
 } from "@getpaseo/protocol/messages";
 import { Session, type SessionOptions } from "./session.js";
-import { createProviderSnapshotManagerStub } from "./test-utils/session-stubs.js";
+import {
+  createProviderSnapshotManagerStub,
+  createEmptyUsageLimitsService,
+} from "./test-utils/session-stubs.js";
 import type { AgentTimelineRow } from "./agent/agent-manager.js";
 import { handleCreatePaseoWorktreeRequest } from "./worktree-session.js";
 
@@ -296,6 +299,7 @@ function createSessionForWireCompatTest(options?: {
     stt: null,
     tts: null,
     providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+    usageLimitsService: createEmptyUsageLimitsService(),
     terminalManager: null,
   });
 

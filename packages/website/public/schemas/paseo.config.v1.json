@@ -115,16 +115,6 @@
           },
           "additionalProperties": false
         },
-        "worktrees": {
-          "type": "object",
-          "properties": {
-            "root": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "additionalProperties": false
-        },
         "providers": {
           "type": "object",
           "properties": {
@@ -147,6 +137,16 @@
                 }
               },
               "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "worktrees": {
+          "type": "object",
+          "properties": {
+            "root": {
+              "type": "string",
+              "minLength": 1
             }
           },
           "additionalProperties": false
@@ -249,6 +249,349 @@
                 },
                 "additionalProperties": false
               }
+            },
+            "metadataGeneration": {
+              "type": "object",
+              "properties": {
+                "providers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "model": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "thinkingOptionId": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": ["provider"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "usageLimits": {
+          "type": "object",
+          "properties": {
+            "plugins": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "preset": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "providerId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "refreshIntervalMs": {
+                    "type": "integer",
+                    "minimum": 30000,
+                    "maximum": 86400000
+                  },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "http"
+                          },
+                          "url": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "method": {
+                            "type": "string",
+                            "enum": ["GET", "POST"],
+                            "default": "GET"
+                          },
+                          "headers": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "default": {}
+                          },
+                          "body": {}
+                        },
+                        "required": ["kind", "url"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "command"
+                          },
+                          "command": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "cwd": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": ["kind", "command"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "readings": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "label": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "group": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "quota"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": ["tokens", "requests", "credits", "usd", "percent"]
+                            },
+                            "window": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "resetsAtPath": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": ["label"],
+                              "additionalProperties": false
+                            },
+                            "usedPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "limitPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "remainingPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "percentPath": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["id", "label", "kind", "unit"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/id"
+                            },
+                            "label": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/label"
+                            },
+                            "group": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/group"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "balance"
+                            },
+                            "unit": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/unit"
+                            },
+                            "remainingPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "totalPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "percentRemainingPath": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "currencyPath": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["id", "label", "kind", "unit"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/id"
+                            },
+                            "label": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/label"
+                            },
+                            "group": {
+                              "$ref": "#/definitions/PaseoConfigV1/properties/usageLimits/properties/plugins/additionalProperties/properties/readings/items/anyOf/0/properties/group"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "rate"
+                            },
+                            "resolution": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "via": {
+                                      "type": "string",
+                                      "const": "schedule"
+                                    },
+                                    "schedule": {
+                                      "type": "object",
+                                      "properties": {
+                                        "timeZone": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "default": "UTC"
+                                        },
+                                        "windows": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "label": {
+                                                "type": "string",
+                                                "minLength": 1
+                                              },
+                                              "start": {
+                                                "type": "string",
+                                                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                                              },
+                                              "end": {
+                                                "type": "string",
+                                                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                                              },
+                                              "multiplier": {
+                                                "type": "number",
+                                                "exclusiveMinimum": 0
+                                              },
+                                              "detail": {
+                                                "type": "string",
+                                                "minLength": 1
+                                              }
+                                            },
+                                            "required": ["label", "start", "end"],
+                                            "additionalProperties": false
+                                          },
+                                          "minItems": 1
+                                        },
+                                        "defaultLabel": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "default": "Standard"
+                                        },
+                                        "defaultMultiplier": {
+                                          "type": "number",
+                                          "exclusiveMinimum": 0,
+                                          "default": 1
+                                        }
+                                      },
+                                      "required": ["windows"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": ["via", "schedule"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "via": {
+                                      "type": "string",
+                                      "const": "response"
+                                    },
+                                    "statePath": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "multiplierPath": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "changesAtPath": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "detailPath": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    }
+                                  },
+                                  "required": ["via", "statePath"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["id", "label", "kind", "resolution"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "minItems": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "default": {}
             }
           },
           "additionalProperties": false
