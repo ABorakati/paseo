@@ -32,6 +32,8 @@ import type {
   CheckoutPullResponse,
   CheckoutPushResponse,
   CheckoutRefreshResponse,
+  UsageLimitsGetSnapshotResponse,
+  UsageLimitsRefreshResponse,
   CheckoutPrCreateResponse,
   CheckoutPrMergeResponse,
   CheckoutPrMergeMethod,
@@ -290,6 +292,8 @@ type CheckoutMergeFromBasePayload = CheckoutMergeFromBaseResponse["payload"];
 type CheckoutPullPayload = CheckoutPullResponse["payload"];
 type CheckoutPushPayload = CheckoutPushResponse["payload"];
 type CheckoutRefreshPayload = CheckoutRefreshResponse["payload"];
+type UsageLimitsGetSnapshotPayload = UsageLimitsGetSnapshotResponse["payload"];
+type UsageLimitsRefreshPayload = UsageLimitsRefreshResponse["payload"];
 type CheckoutPrCreatePayload = CheckoutPrCreateResponse["payload"];
 type CheckoutPrMergePayload = CheckoutPrMergeResponse["payload"];
 type CheckoutGithubSetAutoMergePayload = CheckoutGithubSetAutoMergeResponse["payload"];
@@ -2998,6 +3002,28 @@ export class DaemonClient {
         mergeMethod: input.method,
       },
       responseType: "checkout_pr_merge_response",
+      timeout: 60000,
+    });
+  }
+
+  async getUsageLimitsSnapshot(requestId?: string): Promise<UsageLimitsGetSnapshotPayload> {
+    return this.sendNamespacedCorrelatedSessionRequest<"usage.limits.get_snapshot.response">({
+      requestId,
+      message: { type: "usage.limits.get_snapshot.request" },
+      timeout: 30000,
+    });
+  }
+
+  async refreshUsageLimits(
+    input: { pluginId?: string } = {},
+    requestId?: string,
+  ): Promise<UsageLimitsRefreshPayload> {
+    return this.sendNamespacedCorrelatedSessionRequest<"usage.limits.refresh.response">({
+      requestId,
+      message: {
+        type: "usage.limits.refresh.request",
+        ...(input.pluginId ? { pluginId: input.pluginId } : {}),
+      },
       timeout: 60000,
     });
   }

@@ -42,6 +42,7 @@ import {
   isSessionOutboundMessage,
   filterByType,
   findByType,
+  createEmptyUsageLimitsService,
 } from "./test-utils/session-stubs.js";
 import {
   FileBackedProjectRegistry,
@@ -512,6 +513,7 @@ function createSessionForWorkspaceTests(
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: null,
     }),
   );
@@ -622,6 +624,7 @@ test("create_agent_request keeps requested child cwd when grouped under an exist
         stt: null,
         tts: null,
         providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+        usageLimitsService: createEmptyUsageLimitsService(),
         terminalManager: null,
       }),
     );
@@ -1004,6 +1007,7 @@ test("archive emits an authoritative agent_update upsert for subscribed clients"
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: null,
     }),
   );
@@ -1170,6 +1174,7 @@ test("close_items_request archives agents and kills terminals in one batch", asy
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: asTerminalManager({
         killTerminal,
         subscribeTerminalsChanged: () => () => {},
@@ -1359,6 +1364,7 @@ test("close_items_request archives stored agents that are not currently loaded",
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: null,
     }),
   );
@@ -1509,6 +1515,7 @@ test("close_items_request continues after an archive failure", async () => {
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: asTerminalManager({
         killTerminal: killTerminalBestEffort,
         subscribeTerminalsChanged: () => () => {},
@@ -2376,6 +2383,7 @@ test("workspace update stream keeps persisted workspace visible after agents sto
       stt: null,
       tts: null,
       providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+      usageLimitsService: createEmptyUsageLimitsService(),
       terminalManager: null,
     }),
   );

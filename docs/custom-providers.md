@@ -664,3 +664,11 @@ A config.json with multiple custom providers:
   }
 }
 ```
+
+---
+
+## Usage limits
+
+A custom provider can also report quota, balance, or rate-limit state in the app. That is configured separately, under the top-level `usageLimits` key in the same `config.json`, and linked back to a provider entry with `providerId` so the two share an icon.
+
+See [docs/usage-limits.md](usage-limits.md).

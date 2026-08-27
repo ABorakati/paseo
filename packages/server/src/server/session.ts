@@ -95,6 +95,7 @@ import type {
 
 import { AgentManager } from "./agent/agent-manager.js";
 import { ProviderSnapshotManager, resolveSnapshotCwd } from "./agent/provider-snapshot-manager.js";
+import type { UsageLimitsService } from "./usage-limits/service.js";
 import type {
   AgentManagerEvent,
   AgentTimelineCursor,
@@ -588,6 +589,7 @@ export interface SessionOptions {
   tts: Resolvable<TextToSpeechProvider | null>;
   terminalManager: TerminalManager | null;
   providerSnapshotManager: ProviderSnapshotManager;
+  usageLimitsService: UsageLimitsService;
   scriptRouteStore?: ScriptRouteStore;
   scriptRuntimeStore?: WorkspaceScriptRuntimeStore;
   workspaceSetupSnapshots?: Map<string, WorkspaceSetupSnapshot>;
@@ -801,6 +803,7 @@ export class Session {
   } | null = null;
   private readonly terminalManager: TerminalManager | null;
   private readonly providerSnapshotManager: ProviderSnapshotManager;
+  private readonly usageLimitsService: UsageLimitsService;
   private unsubscribeProviderSnapshotEvents: (() => void) | null = null;
   private readonly scriptRouteStore: ScriptRouteStore | null;
   private readonly scriptRuntimeStore: WorkspaceScriptRuntimeStore | null;
@@ -879,6 +882,7 @@ export class Session {
       tts,
       terminalManager,
       providerSnapshotManager,
+      usageLimitsService,
       scriptRouteStore,
       scriptRuntimeStore,
       workspaceSetupSnapshots,
@@ -963,6 +967,7 @@ export class Session {
       logger: this.sessionLogger,
     });
     this.providerSnapshotManager = providerSnapshotManager;
+    this.usageLimitsService = usageLimitsService;
     this.scriptRouteStore = scriptRouteStore ?? null;
     this.scriptRuntimeStore = scriptRuntimeStore ?? null;
     this.workspaceSetupSnapshots = workspaceSetupSnapshots ?? new Map();
@@ -1927,6 +1932,10 @@ export class Session {
           },
         });
         return undefined;
+      case "usage.limits.get_snapshot.request":
+        return this.handleUsageLimitsGetSnapshotRequest(msg);
+      case "usage.limits.refresh.request":
+        return this.handleUsageLimitsRefreshRequest(msg);
       case "read_project_config_request":
         return this.handleReadProjectConfigRequest(msg);
       case "write_project_config_request":
@@ -3822,6 +3831,37 @@ export class Session {
           listen: null,
           relay: null,
           providers: [],
+        },
+      });
+    }
+  }
+
+  private async handleUsageLimitsGetSnapshotRequest(
+    msg: Extract<SessionInboundMessage, { type: "usage.limits.get_snapshot.request" }>,
+  ): Promise<void> {
+    const snapshot = await this.usageLimitsService.getSnapshot();
+    this.emit({
+      type: "usage.limits.get_snapshot.response",
+      payload: { requestId: msg.requestId, snapshot },
+    });
+  }
+
+  private async handleUsageLimitsRefreshRequest(
+    msg: Extract<SessionInboundMessage, { type: "usage.limits.refresh.request" }>,
+  ): Promise<void> {
+    try {
+      const snapshot = await this.usageLimitsService.refresh(msg.pluginId);
+      this.emit({
+        type: "usage.limits.refresh.response",
+        payload: { requestId: msg.requestId, snapshot },
+      });
+    } catch (error) {
+      this.sessionLogger.error({ err: error }, "Failed to refresh usage limits");
+      this.emit({
+        type: "usage.limits.refresh.response",
+        payload: {
+          requestId: msg.requestId,
+          snapshot: await this.usageLimitsService.getSnapshot(),
         },
       });
     }

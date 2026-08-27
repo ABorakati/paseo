@@ -14,6 +14,7 @@ import type {
   ResolvedProviderCreateConfig,
 } from "../agent/provider-snapshot-manager.js";
 import { ProviderSnapshotManager } from "../agent/provider-snapshot-manager.js";
+import { createUsageLimitsService, type UsageLimitsService } from "../usage-limits/service.js";
 import type { SessionOptions } from "../session.js";
 import type { SessionOutboundMessage } from "@getpaseo/protocol/messages";
 import { asInternals, createStub } from "./class-mocks.js";
@@ -248,4 +249,9 @@ export function createProviderSnapshotManagerStub(): {
     applyMutableProviderConfig,
     destroy,
   };
+}
+
+/** A real service with no plugins configured: it never reaches the network. */
+export function createEmptyUsageLimitsService(): UsageLimitsService {
+  return createUsageLimitsService({ overrides: {} });
 }

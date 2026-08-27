@@ -88,6 +88,8 @@ function formatListenTarget(listenTarget: ListenTarget | null): string | null {
 
 import { VoiceAssistantWebSocketServer } from "./websocket-server.js";
 import { createGitHubService } from "../services/github-service.js";
+import { createUsageLimitsService } from "./usage-limits/service.js";
+import type { UsageLimitPluginOverrides } from "@getpaseo/protocol/usage-limits/types";
 import { createPaseoWorktree as createRegisteredPaseoWorktree } from "./paseo-worktree-service.js";
 import { createPaseoWorktreeWorkflow } from "./worktree-session.js";
 import { DownloadTokenStore } from "./file-download/token-store.js";
@@ -267,6 +269,7 @@ export interface PaseoDaemonConfig {
     }>;
   };
   providerOverrides?: Record<string, ProviderOverride>;
+  usageLimitPlugins?: UsageLimitPluginOverrides;
   log?: PersistedConfig["log"];
   onLifecycleIntent?: (intent: DaemonLifecycleIntent) => void;
   pushNotificationSender?: PushNotificationSender;
@@ -516,6 +519,9 @@ export async function createPaseoDaemon(
   });
   const terminalManager = createConfiguredTerminalManager();
   const github = createGitHubService();
+  const usageLimitsService = createUsageLimitsService({
+    overrides: config.usageLimitPlugins ?? {},
+  });
   const workspaceGitService = new WorkspaceGitServiceImpl({
     logger,
     paseoHome: config.paseoHome,
@@ -968,6 +974,7 @@ export async function createPaseoDaemon(
             github,
             config.pushNotificationSender,
             providerSnapshotManager,
+            usageLimitsService,
             {
               listen: formatListenTarget(boundListenTarget ?? listenTarget),
               worktreesRoot: config.worktreesRoot,

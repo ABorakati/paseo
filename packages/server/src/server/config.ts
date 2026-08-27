@@ -364,6 +364,7 @@ export function loadConfig(
     agentProviderSettings: extractAgentProviderSettings(providerOverrides),
     metadataGeneration: persisted.agents?.metadataGeneration,
     providerOverrides,
+    usageLimitPlugins: persisted.usageLimits?.plugins ?? {},
     log: resolveLogConfigFromEnv(env, persisted),
   };
 }
