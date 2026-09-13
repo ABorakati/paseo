@@ -1,0 +1,18 @@
+packages/server/src/server/plugins/preparation.test.ts
+  h_0ae9538d78aa59 1,39,65-67
+packages/server/src/server/plugins/preparation.ts
+  h_0ae9538d78aa59 4-8,16,20,38-42,46-49
+packages/server/src/utils/spawn.ts
+  h_0ae9538d78aa59 43-55,59-60,67-68,89,96-110,118,125-132,150,157-163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "23c79c3bd7e9f12c41879bd30349d689c3a76032",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
