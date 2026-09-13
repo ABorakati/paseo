@@ -1,0 +1,16 @@
+packages/server/src/server/plugins/preparation.test.ts
+  h_0ae9538d78aa59 1-72
+packages/server/src/server/plugins/preparation.ts
+  h_0ae9538d78aa59 1,36,40,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "34894bbd1dfcf61344d7a6e4b74cb26ae1de88b1",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
