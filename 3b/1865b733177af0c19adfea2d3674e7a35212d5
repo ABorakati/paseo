@@ -1,0 +1,16 @@
+packages/server/src/server/plugins/preparation.test.ts
+  h_0ae9538d78aa59 56-99
+packages/server/src/utils/spawn.ts
+  h_0ae9538d78aa59 2-3,43-68,72,80-91,102,133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3b1865b733177af0c19adfea2d3674e7a35212d5",
+  "prompts": {},
+  "humans": {
+    "h_0ae9538d78aa59": {
+      "author": "ABorakati <ABorakati@users.noreply.github.com>"
+    }
+  }
+}
